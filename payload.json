@@ -1,0 +1,9 @@
+{
+  "name": "Chiến dịch mở tài khoản",
+  "subject": "Mở tài khoản trong 5 phút",
+  "content": "<p>Xin chào, đây là cơ hội để bạn mở tài khoản ngân hàng nhanh chóng!</p>",
+  "recipients": [
+    "user1@example.com",
+    "user2@example.com"
+  ]
+}
