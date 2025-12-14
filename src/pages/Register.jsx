@@ -1,10 +1,8 @@
-// src/pages/Register.jsx - ENHANCED VERSION
+// src/pages/Register.jsx - WITH EMAIL EXISTENCE VERIFICATION
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import UserPool from '../cognitoConfig';
-import PasswordStrengthIndicator from '../components/PasswordStrengthIndicator';
-import EmailValidator from '../components/EmailValidator';
-import { Check, X, Eye, EyeOff, AlertCircle, CheckCircle2, Mail } from 'lucide-react';
+import { Check, X, Eye, EyeOff, AlertCircle, CheckCircle2, Mail, Loader2 } from 'lucide-react';
 
 const Register = () => {
   const [email, setEmail] = useState('');
@@ -14,6 +12,7 @@ const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [emailChecking, setEmailChecking] = useState(false);
   const navigate = useNavigate();
 
   // Password requirements state
@@ -29,8 +28,192 @@ const Register = () => {
   // Email validation state
   const [emailValidation, setEmailValidation] = useState({
     isValid: false,
-    message: ''
+    isChecked: false,
+    status: 'empty', // empty, checking, invalid, warning, valid
+    message: '',
+    canRegister: true
   });
+
+  // ============================================
+  // EMAIL VALIDATION FUNCTIONS
+  // ============================================
+  
+  const checkDomainMXRecord = async (email) => {
+    const domain = email.split('@')[1];
+    
+    try {
+      const response = await fetch(
+        `https://dns.google/resolve?name=${domain}&type=MX`
+      );
+      
+      const data = await response.json();
+      return data.Answer && data.Answer.length > 0;
+    } catch (error) {
+      console.error('MX Check Error:', error);
+      return null; // Không chắc chắn
+    }
+  };
+
+  const detectSuspiciousEmail = (email) => {
+    const domain = email.split('@')[1]?.toLowerCase();
+    const localPart = email.split('@')[0]?.toLowerCase();
+
+    // Disposable email domains
+    const disposableDomains = [
+      'tempmail.com', 'guerrillamail.com', '10minutemail.com',
+      'mailinator.com', 'throwaway.email', 'temp-mail.org',
+      'fakeinbox.com', 'trashmail.com', 'yopmail.com'
+    ];
+
+    if (disposableDomains.includes(domain)) {
+      return {
+        isSuspicious: true,
+        severity: 'high',
+        message: '❌ Disposable email addresses are not allowed'
+      };
+    }
+
+    // Fake patterns
+    const fakePatterns = [
+      /test\d+/i,
+      /fake\d+/i,
+      /temp\d+/i,
+      /dummy\d+/i,
+      /^\d{6,}$/,  // chỉ toàn số
+    ];
+
+    for (const pattern of fakePatterns) {
+      if (pattern.test(localPart)) {
+        return {
+          isSuspicious: true,
+          severity: 'medium',
+          message: '⚠️ Email looks like a test account'
+        };
+      }
+    }
+
+    return { isSuspicious: false };
+  };
+
+  const validateEmail = async (emailInput) => {
+    if (!emailInput || emailInput.trim() === '') {
+      setEmailValidation({
+        isValid: false,
+        isChecked: false,
+        status: 'empty',
+        message: '',
+        canRegister: false
+      });
+      return;
+    }
+
+    // Basic format check
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(emailInput)) {
+      setEmailValidation({
+        isValid: false,
+        isChecked: true,
+        status: 'invalid',
+        message: '❌ Invalid email format',
+        canRegister: false
+      });
+      return;
+    }
+
+    setEmailChecking(true);
+    setEmailValidation(prev => ({ ...prev, status: 'checking' }));
+
+    // Check typos in domain
+    const [localPart, domain] = emailInput.toLowerCase().split('@');
+    const domainSuggestions = {
+      'gmial.com': 'gmail.com',
+      'gmai.com': 'gmail.com',
+      'gmil.com': 'gmail.com',
+      'gmaill.com': 'gmail.com',
+      'gmailll.com': 'gmail.com',
+      'gnail.com': 'gmail.com',
+      'yaho.com': 'yahoo.com',
+      'yahooo.com': 'yahoo.com',
+      'outloo.com': 'outlook.com',
+      'hotmial.com': 'hotmail.com',
+    };
+
+    if (domainSuggestions[domain]) {
+      setEmailChecking(false);
+      setEmailValidation({
+        isValid: false,
+        isChecked: true,
+        status: 'invalid',
+        message: `❌ Did you mean ${localPart}@${domainSuggestions[domain]}?`,
+        suggestion: `${localPart}@${domainSuggestions[domain]}`,
+        canRegister: false
+      });
+      return;
+    }
+
+    // Check suspicious patterns
+    const suspicious = detectSuspiciousEmail(emailInput);
+    if (suspicious.isSuspicious && suspicious.severity === 'high') {
+      setEmailChecking(false);
+      setEmailValidation({
+        isValid: false,
+        isChecked: true,
+        status: 'invalid',
+        message: suspicious.message,
+        canRegister: false
+      });
+      return;
+    }
+
+    // Check MX record (domain có thể nhận email không)
+    const hasMX = await checkDomainMXRecord(emailInput);
+    
+    setEmailChecking(false);
+
+    if (hasMX === false) {
+      // Domain không tồn tại hoặc không có mail server
+      setEmailValidation({
+        isValid: false,
+        isChecked: true,
+        status: 'invalid',
+        message: `❌ Domain "${domain}" cannot receive emails`,
+        canRegister: false
+      });
+      return;
+    }
+
+    // Nếu có suspicious pattern (medium severity) → warning nhưng vẫn cho phép
+    if (suspicious.isSuspicious) {
+      setEmailValidation({
+        isValid: true,
+        isChecked: true,
+        status: 'warning',
+        message: suspicious.message,
+        canRegister: true
+      });
+      return;
+    }
+
+    // Email hợp lệ
+    setEmailValidation({
+      isValid: true,
+      isChecked: true,
+      status: 'valid',
+      message: '✅ Email validated successfully',
+      canRegister: true
+    });
+  };
+
+  // Debounce email validation
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (email) {
+        validateEmail(email);
+      }
+    }, 800); // Đợi 800ms sau khi user ngừng gõ
+
+    return () => clearTimeout(timer);
+  }, [email]);
 
   // Real-time password validation
   useEffect(() => {
@@ -44,76 +227,9 @@ const Register = () => {
     });
   }, [password, confirmPassword]);
 
-  // Real-time email validation
-  useEffect(() => {
-    if (email === '') {
-      setEmailValidation({ isValid: false, message: '' });
-      return;
-    }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    
-    if (!emailRegex.test(email)) {
-      setEmailValidation({
-        isValid: false,
-        message: 'Invalid email format'
-      });
-      return;
-    }
-
-    // Check for common typos in popular domains
-    const commonDomains = ['gmail.com', 'yahoo.com', 'outlook.com', 'hotmail.com'];
-    const domain = email.split('@')[1];
-    
-    if (domain) {
-      const similarDomain = commonDomains.find(d => {
-        const distance = levenshteinDistance(domain.toLowerCase(), d);
-        return distance === 1 || distance === 2;
-      });
-
-      if (similarDomain) {
-        setEmailValidation({
-          isValid: true,
-          message: `Did you mean @${similarDomain}?`
-        });
-        return;
-      }
-    }
-
-    setEmailValidation({
-      isValid: true,
-      message: 'Valid email format'
-    });
-  }, [email]);
-
-  // Levenshtein distance for typo detection
-  const levenshteinDistance = (str1, str2) => {
-    const matrix = [];
-    
-    for (let i = 0; i <= str2.length; i++) {
-      matrix[i] = [i];
-    }
-    
-    for (let j = 0; j <= str1.length; j++) {
-      matrix[0][j] = j;
-    }
-    
-    for (let i = 1; i <= str2.length; i++) {
-      for (let j = 1; j <= str1.length; j++) {
-        if (str2.charAt(i - 1) === str1.charAt(j - 1)) {
-          matrix[i][j] = matrix[i - 1][j - 1];
-        } else {
-          matrix[i][j] = Math.min(
-            matrix[i - 1][j - 1] + 1,
-            matrix[i][j - 1] + 1,
-            matrix[i - 1][j] + 1
-          );
-        }
-      }
-    }
-    
-    return matrix[str2.length][str1.length];
-  };
+  // ============================================
+  // VALIDATION HELPERS
+  // ============================================
 
   const isPasswordValid = () => {
     return Object.entries(passwordChecks)
@@ -122,16 +238,18 @@ const Register = () => {
   };
 
   const canSubmit = () => {
-    return emailValidation.isValid && 
+    return emailValidation.canRegister && 
+           emailValidation.isChecked &&
            isPasswordValid() && 
-           passwordChecks.passwordsMatch;
+           passwordChecks.passwordsMatch &&
+           !emailChecking;
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
     
     if (!canSubmit()) {
-      setMessage('Please fix all validation errors before submitting');
+      setMessage('❌ Please fix all validation errors before submitting');
       return;
     }
 
@@ -144,7 +262,6 @@ const Register = () => {
       if (err) {
         console.error('Registration error:', err);
         
-        // Enhanced error messages
         if (err.code === 'UsernameExistsException') {
           setMessage('❌ This email is already registered. Please try logging in instead.');
         } else if (err.code === 'InvalidPasswordException') {
@@ -160,16 +277,24 @@ const Register = () => {
     });
   };
 
-  const RequirementItem = ({ label, isValid, showCheck = true }) => (
+  const handleEmailSuggestionClick = () => {
+    if (emailValidation.suggestion) {
+      setEmail(emailValidation.suggestion);
+    }
+  };
+
+  // ============================================
+  // UI COMPONENTS
+  // ============================================
+
+  const RequirementItem = ({ label, isValid }) => (
     <div className={`flex items-center gap-2 p-2 rounded-lg transition-all ${
       isValid ? 'bg-green-50 text-green-700' : 'bg-gray-50 text-gray-600'
     }`}>
-      {showCheck && (
-        isValid ? (
-          <CheckCircle2 size={18} className="text-green-600 flex-shrink-0" />
-        ) : (
-          <X size={18} className="text-gray-400 flex-shrink-0" />
-        )
+      {isValid ? (
+        <CheckCircle2 size={18} className="text-green-600 flex-shrink-0" />
+      ) : (
+        <X size={18} className="text-gray-400 flex-shrink-0" />
       )}
       <span className="text-sm font-medium">{label}</span>
     </div>
@@ -212,36 +337,71 @@ const Register = () => {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Email Input */}
+          {/* Email Input with Real-time Validation */}
           <div>
             <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
               <Mail size={18} />
               Email Address
             </label>
-            <input
-              type="email"
-              placeholder="your.email@example.com"
-              className={`w-full p-4 border-2 rounded-xl focus:outline-none transition-all ${
-                email === '' 
-                  ? 'border-gray-300 focus:border-purple-500'
-                  : emailValidation.isValid
-                  ? 'border-green-500 focus:border-green-600 bg-green-50'
-                  : 'border-red-500 focus:border-red-600 bg-red-50'
-              }`}
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-            {email !== '' && (
-              <div className={`mt-2 text-sm flex items-center gap-2 ${
-                emailValidation.isValid ? 'text-green-600' : 'text-red-600'
+            <div className="relative">
+              <input
+                type="email"
+                placeholder="your.email@example.com"
+                className={`w-full p-4 pr-12 border-2 rounded-xl focus:outline-none transition-all ${
+                  emailValidation.status === 'empty' 
+                    ? 'border-gray-300 focus:border-purple-500'
+                    : emailValidation.status === 'checking'
+                    ? 'border-blue-400 focus:border-blue-500'
+                    : emailValidation.status === 'valid'
+                    ? 'border-green-500 focus:border-green-600 bg-green-50'
+                    : emailValidation.status === 'warning'
+                    ? 'border-yellow-500 focus:border-yellow-600 bg-yellow-50'
+                    : 'border-red-500 focus:border-red-600 bg-red-50'
+                }`}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+              {emailChecking && (
+                <Loader2 size={20} className="absolute right-4 top-1/2 -translate-y-1/2 text-blue-500 animate-spin" />
+              )}
+            </div>
+
+            {/* Email Validation Message */}
+            {emailValidation.status !== 'empty' && !emailChecking && (
+              <div className={`mt-2 p-3 rounded-lg border-2 flex items-start gap-3 ${
+                emailValidation.status === 'valid'
+                  ? 'bg-green-50 border-green-200 text-green-700'
+                  : emailValidation.status === 'warning'
+                  ? 'bg-yellow-50 border-yellow-200 text-yellow-700'
+                  : 'bg-red-50 border-red-200 text-red-700'
               }`}>
-                {emailValidation.isValid ? (
-                  <CheckCircle2 size={16} />
+                {emailValidation.status === 'valid' ? (
+                  <CheckCircle2 size={18} className="flex-shrink-0 mt-0.5" />
                 ) : (
-                  <AlertCircle size={16} />
+                  <AlertCircle size={18} className="flex-shrink-0 mt-0.5" />
                 )}
-                <span className="font-medium">{emailValidation.message}</span>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold">{emailValidation.message}</p>
+                  {emailValidation.suggestion && (
+                    <button
+                      type="button"
+                      onClick={handleEmailSuggestionClick}
+                      className="mt-2 text-xs font-mono bg-white/70 px-3 py-1 rounded hover:bg-white transition"
+                    >
+                      Click to use: {emailValidation.suggestion}
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {emailChecking && (
+              <div className="mt-2 p-3 rounded-lg bg-blue-50 border-2 border-blue-200 flex items-center gap-3">
+                <Loader2 size={18} className="animate-spin text-blue-600" />
+                <span className="text-sm font-medium text-blue-700">
+                  Verifying email domain...
+                </span>
               </div>
             )}
           </div>
@@ -295,26 +455,11 @@ const Register = () => {
             {/* Password Requirements */}
             <div className="mt-4 p-4 bg-gray-50 rounded-xl space-y-2">
               <p className="text-sm font-bold text-gray-700 mb-3">Password must contain:</p>
-              <RequirementItem 
-                label="At least 8 characters" 
-                isValid={passwordChecks.minLength} 
-              />
-              <RequirementItem 
-                label="At least 1 number (0-9)" 
-                isValid={passwordChecks.hasNumber} 
-              />
-              <RequirementItem 
-                label="At least 1 special character (!@#$%^&*)" 
-                isValid={passwordChecks.hasSpecial} 
-              />
-              <RequirementItem 
-                label="At least 1 uppercase letter (A-Z)" 
-                isValid={passwordChecks.hasUppercase} 
-              />
-              <RequirementItem 
-                label="At least 1 lowercase letter (a-z)" 
-                isValid={passwordChecks.hasLowercase} 
-              />
+              <RequirementItem label="At least 8 characters" isValid={passwordChecks.minLength} />
+              <RequirementItem label="At least 1 number (0-9)" isValid={passwordChecks.hasNumber} />
+              <RequirementItem label="At least 1 special character (!@#$%^&*)" isValid={passwordChecks.hasSpecial} />
+              <RequirementItem label="At least 1 uppercase letter (A-Z)" isValid={passwordChecks.hasUppercase} />
+              <RequirementItem label="At least 1 lowercase letter (a-z)" isValid={passwordChecks.hasLowercase} />
             </div>
           </div>
 
@@ -347,7 +492,6 @@ const Register = () => {
               </button>
             </div>
 
-            {/* Password Match Indicator */}
             {confirmPassword !== '' && (
               <div className={`mt-2 p-3 rounded-lg flex items-center gap-2 ${
                 passwordChecks.passwordsMatch 
@@ -381,7 +525,7 @@ const Register = () => {
           >
             {isSubmitting ? (
               <span className="flex items-center justify-center gap-2">
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                <Loader2 size={20} className="animate-spin" />
                 Creating Account...
               </span>
             ) : (
@@ -390,7 +534,6 @@ const Register = () => {
           </button>
         </form>
 
-        {/* Login Link */}
         <div className="text-center mt-6">
           <span className="text-gray-600">Already have an account? </span>
           <a 
@@ -401,13 +544,13 @@ const Register = () => {
           </a>
         </div>
 
-        {/* Security Notice */}
+        {/* Info Box */}
         <div className="mt-8 p-4 bg-blue-50 border border-blue-200 rounded-xl">
           <div className="flex items-start gap-3">
             <AlertCircle size={20} className="text-blue-600 flex-shrink-0 mt-0.5" />
             <div className="text-sm text-blue-700">
-              <p className="font-semibold mb-1">Security Notice</p>
-              <p>Your password is encrypted and stored securely. We never store passwords in plain text.</p>
+              <p className="font-semibold mb-1">📧 Email Verification</p>
+              <p>We verify that your email domain can receive messages. You'll receive a verification code after registration.</p>
             </div>
           </div>
         </div>
