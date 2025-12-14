@@ -1,7 +1,7 @@
-// src/pages/CampaignList.jsx - IMPROVED VERSION
+// src/pages/CampaignList.jsx - UPDATED WITH UNVERIFIED EMAIL HANDLING
 import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Plus, Zap, TrendingUp, Mail, Search } from "lucide-react";
+import { Plus, Zap, TrendingUp, Mail, Search, AlertCircle } from "lucide-react";
 
 export default function CampaignList() {
   const [campaigns, setCampaigns] = useState([]);
@@ -72,6 +72,8 @@ export default function CampaignList() {
         return "bg-green-400 border-green-600";
       case "CLICKED":
         return "bg-blue-400 border-blue-600";
+      case "PENDING_VERIFICATION":
+        return "bg-orange-300 border-orange-500";
       case "FAILED":
         return "bg-red-300 border-red-500";
       case "DRAFT":
@@ -81,12 +83,17 @@ export default function CampaignList() {
     }
   };
 
-  const getStatusBadge = (status) => {
+  const getStatusBadge = (status, campaign) => {
     const badges = {
       SCHEDULED: { icon: "⏰", text: "Scheduled", color: "bg-yellow-100 text-yellow-800 border-yellow-300" },
       SENT: { icon: "📧", text: "Sent", color: "bg-green-100 text-green-800 border-green-300" },
       OPENED: { icon: "👁️", text: "Opened", color: "bg-green-200 text-green-900 border-green-400" },
       CLICKED: { icon: "🖱️", text: "Clicked", color: "bg-blue-200 text-blue-900 border-blue-400" },
+      PENDING_VERIFICATION: { 
+        icon: "⚠️", 
+        text: "Pending Verification", 
+        color: "bg-orange-100 text-orange-800 border-orange-300" 
+      },
       FAILED: { icon: "❌", text: "Failed", color: "bg-red-100 text-red-800 border-red-300" },
       DRAFT: { icon: "📝", text: "Draft", color: "bg-gray-100 text-gray-800 border-gray-300" }
     };
@@ -94,10 +101,28 @@ export default function CampaignList() {
     const badge = badges[status] || { icon: "❓", text: status, color: "bg-purple-100 text-purple-800 border-purple-300" };
 
     return (
-      <span className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-semibold border-2 ${badge.color}`}>
-        <span className="text-lg">{badge.icon}</span>
-        {badge.text}
-      </span>
+      <div className="flex flex-col gap-2">
+        <span className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-semibold border-2 ${badge.color}`}>
+          <span className="text-lg">{badge.icon}</span>
+          {badge.text}
+        </span>
+        
+        {/* ✅ Hiển thị thông tin email cần verify */}
+        {status === "PENDING_VERIFICATION" && campaign.unverified_emails && (
+          <div className="flex items-start gap-2 text-xs text-orange-700 bg-orange-50 p-2 rounded border border-orange-200">
+            <AlertCircle size={14} className="flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="font-semibold mb-1">Unverified emails:</p>
+              <ul className="list-disc list-inside space-y-0.5">
+                {campaign.unverified_emails.map((email, idx) => (
+                  <li key={idx} className="font-mono">{email}</li>
+                ))}
+              </ul>
+              <p className="mt-1 italic">Verification emails have been sent. Please check inbox.</p>
+            </div>
+          </div>
+        )}
+      </div>
     );
   };
 
@@ -116,13 +141,11 @@ export default function CampaignList() {
       .replace(/\//g, "-");
   };
 
-  // ✅ Filter campaigns based on search
   const filteredCampaigns = campaigns.filter(campaign =>
     campaign.subject?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     campaign.campaign_id?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // ✅ EMPTY STATE - Show when no campaigns
   if (!loading && campaigns.length === 0) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 p-6">
@@ -138,9 +161,7 @@ export default function CampaignList() {
               You haven't created any campaigns yet. Let's get started!
             </p>
 
-            {/* CTA Grid */}
             <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-              {/* Regular Campaign */}
               <div className="bg-white rounded-3xl p-8 shadow-xl hover:shadow-2xl transition-all hover:scale-105">
                 <div className="text-6xl mb-4">📧</div>
                 <h3 className="text-2xl font-bold text-gray-800 mb-3">
@@ -156,7 +177,6 @@ export default function CampaignList() {
                 </Link>
               </div>
 
-              {/* Drip Campaign */}
               <div className="bg-gradient-to-br from-purple-600 to-pink-600 text-white rounded-3xl p-8 shadow-xl hover:shadow-2xl transition-all hover:scale-105">
                 <div className="text-6xl mb-4">🚀</div>
                 <h3 className="text-2xl font-bold mb-3">
@@ -173,7 +193,6 @@ export default function CampaignList() {
               </div>
             </div>
 
-            {/* Template Library CTA */}
             <div className="mt-12">
               <p className="text-gray-600 mb-4">
                 Want to start with a template?
@@ -193,7 +212,6 @@ export default function CampaignList() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 p-6">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
           <div>
             <h1 className="text-4xl font-bold text-gray-800 mb-2">
@@ -221,9 +239,7 @@ export default function CampaignList() {
         </div>
 
         <div className="grid lg:grid-cols-4 gap-6">
-          {/* Main Content - Campaign List */}
           <div className="lg:col-span-3 space-y-6">
-            {/* Search Bar */}
             <div className="bg-white rounded-2xl p-4 shadow-md">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
@@ -237,7 +253,7 @@ export default function CampaignList() {
               </div>
             </div>
 
-            {/* Status Legend */}
+            {/* ✅ UPDATED: Thêm PENDING_VERIFICATION vào legend */}
             <div className="bg-white rounded-2xl p-4 shadow-md">
               <h3 className="text-sm font-semibold text-gray-700 mb-3">📊 Status Guide:</h3>
               <div className="flex flex-wrap gap-3">
@@ -258,13 +274,16 @@ export default function CampaignList() {
                   <span className="text-sm">Clicked</span>
                 </div>
                 <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 rounded bg-orange-300 border-2 border-orange-500"></div>
+                  <span className="text-sm">Pending Verification</span>
+                </div>
+                <div className="flex items-center gap-2">
                   <div className="w-4 h-4 rounded bg-red-300 border-2 border-red-500"></div>
                   <span className="text-sm">Failed</span>
                 </div>
               </div>
             </div>
 
-            {/* Campaign List */}
             {loading ? (
               <div className="text-center py-12">
                 <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-purple-600 mx-auto"></div>
@@ -288,9 +307,9 @@ export default function CampaignList() {
                           <span className="text-xs font-mono text-gray-500 bg-gray-100 px-2 py-1 rounded">
                             {item.campaign_id.replace("campaign#", "")}
                           </span>
-                          {getStatusBadge(item.status)}
                         </div>
-                        <h3 className="text-xl font-bold text-gray-800 mb-2">
+                        {getStatusBadge(item.status, item)}
+                        <h3 className="text-xl font-bold text-gray-800 mb-2 mt-3">
                           {item.subject}
                         </h3>
                         <p className="text-sm text-gray-600">
@@ -314,9 +333,7 @@ export default function CampaignList() {
             )}
           </div>
 
-          {/* Sidebar - Drip Campaign Promotion */}
           <div className="lg:col-span-1 space-y-6">
-            {/* ✅ IMPROVED: Subtle Drip Campaign Card */}
             <div className="bg-gradient-to-br from-purple-600 to-pink-600 text-white rounded-2xl p-6 shadow-xl sticky top-6">
               <div className="flex items-center gap-3 mb-4">
                 <Zap size={32} className="text-yellow-300" />
@@ -355,7 +372,6 @@ export default function CampaignList() {
               </Link>
             </div>
 
-            {/* Quick Stats Card */}
             <div className="bg-white rounded-2xl p-6 shadow-md">
               <h3 className="text-lg font-bold text-gray-800 mb-4">📊 Quick Stats</h3>
               <div className="space-y-3">
@@ -367,6 +383,12 @@ export default function CampaignList() {
                   <span className="text-gray-600">Active:</span>
                   <span className="font-bold text-green-600">
                     {campaigns.filter(c => c.status === "OPENED" || c.status === "CLICKED").length}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Pending Verification:</span>
+                  <span className="font-bold text-orange-600">
+                    {campaigns.filter(c => c.status === "PENDING_VERIFICATION").length}
                   </span>
                 </div>
                 <div className="flex justify-between">
