@@ -1,7 +1,11 @@
-// DripCampaignBuilder.jsx - English Version
+// DripCampaignBuilder.jsx - WITH SENDER EMAIL DISPLAY
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
+import { Shield, CheckCircle, Mail } from "lucide-react";
+
+// ✅ Custom domain email
+const SENDER_EMAIL = "noreply@oachxalach.com";
 
 // TiptapEditor component
 function TiptapEditor({ value, onChange }) {
@@ -153,6 +157,28 @@ export default function DripCampaignBuilder() {
           Drip Campaign Builder
         </h1>
         <p className="text-xl text-gray-600 mt-4">Automatically send emails based on user behavior</p>
+      </div>
+
+      {/* ✅ NEW: Sender Email Info Box */}
+      <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-300 rounded-3xl p-6 mb-8 shadow-lg">
+        <div className="flex items-start gap-4">
+          <div className="bg-green-500 p-3 rounded-full flex-shrink-0">
+            <Shield size={28} className="text-white" />
+          </div>
+          <div className="flex-1">
+            <h3 className="text-xl font-bold text-green-800 mb-2 flex items-center gap-2">
+              <CheckCircle size={20} className="text-green-600" />
+              Verified Sender Domain
+            </h3>
+            <div className="bg-white border-2 border-green-300 rounded-xl p-3 flex items-center gap-3">
+              <Mail size={20} className="text-green-600 flex-shrink-0" />
+              <div>
+                <p className="text-xs text-gray-600">All drip emails will be sent from:</p>
+                <p className="text-lg font-bold text-green-700 font-mono">{SENDER_EMAIL}</p>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Timeline */}
