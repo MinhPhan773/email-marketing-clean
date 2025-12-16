@@ -96,7 +96,7 @@ export default function CreateCampaign() {
     }
     
     setShowTemplateModal(false);
-    setSuccessMessage(`âœ… Template applied: ${template.name}`);
+    setSuccessMessage(`✅ Template applied: ${template.name}`);
     
     // Clear success message after 3 seconds
     setTimeout(() => setSuccessMessage(''), 3000);
@@ -113,13 +113,13 @@ export default function CreateCampaign() {
     const invalidEmails = emailList.filter(email => !isValidEmail(email));
 
     if (invalidEmails.length > 0) {
-      setErrorMessage(`âŒ Invalid email: ${invalidEmails.join(', ')}. Please check again!`);
+      setErrorMessage(`❌ Invalid email: ${invalidEmails.join(', ')}. Please check again!`);
       setLoadingSubmit(false);
       return;
     }
 
     if (emailList.length === 0) {
-      setErrorMessage("âŒ Please enter at least 1 email!");
+      setErrorMessage("❌ Please enter at least 1 email!");
       setLoadingSubmit(false);
       return;
     }
@@ -147,14 +147,14 @@ export default function CreateCampaign() {
 
       const data = await response.json();
       if (response.ok) {
-        setSuccessMessage(`ðŸŽ‰ Campaign created successfully! ID: ${data.campaignId}`);
+        setSuccessMessage(`🎉 Campaign created successfully! ID: ${data.campaignId}`);
         setTimeout(() => navigate("/campaigns"), 2500);
       } else {
-        setErrorMessage(`âŒ Error: ${data.message || 'Unknown error'}`);
+        setErrorMessage(`❌ Error: ${data.message || 'Unknown error'}`);
       }
     } catch (error) {
       console.error(error);
-      setErrorMessage('âŒ Connection error to API');
+      setErrorMessage('❌ Connection error to API');
     } finally {
       setLoadingSubmit(false);
     }
@@ -175,7 +175,7 @@ export default function CreateCampaign() {
             to="/drip-builder" 
             className="px-10 py-5 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-2xl font-bold rounded-3xl hover:scale-110 transition shadow-2xl"
           >
-            ðŸš€ Drip Campaign Builder
+            🚀 Drip Campaign Builder
           </Link>
         </div>
       </div>
@@ -202,7 +202,7 @@ export default function CreateCampaign() {
             to="/templates" 
             className="inline-block mt-3 text-purple-600 hover:underline text-lg font-semibold"
           >
-            ðŸ“š Or create new template in Template Library
+            📚 Or create new template in Template Library
           </Link>
         </div>
 
@@ -240,7 +240,7 @@ export default function CreateCampaign() {
           />
 
           <div>
-            <label className="block text-xl font-bold mb-3">â° Schedule send (optional)</label>
+            <label className="block text-xl font-bold mb-3">⏰ Schedule send (optional)</label>
             <input
               type="datetime-local"
               className="w-full p-5 border-2 border-gray-300 rounded-2xl text-xl"
@@ -261,7 +261,7 @@ export default function CreateCampaign() {
                 : "bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:from-blue-700 hover:to-cyan-700"
             }`}
           >
-            {loadingSubmit ? "â³ CREATING CAMPAIGN..." : "ðŸš€ CREATE CAMPAIGN NOW"}
+            {loadingSubmit ? "⏳ CREATING CAMPAIGN..." : "🚀 CREATE CAMPAIGN NOW"}
           </button>
         </form>
 
@@ -271,7 +271,7 @@ export default function CreateCampaign() {
             <div className="bg-white rounded-3xl shadow-3xl max-w-6xl w-full max-h-[90vh] overflow-y-auto p-10">
               <div className="flex justify-between items-center mb-8">
                 <h2 className="text-5xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                  ðŸ“š Choose Saved Template
+                  📚 Choose Saved Template
                 </h2>
                 <button
                   onClick={() => setShowTemplateModal(false)}
@@ -289,7 +289,7 @@ export default function CreateCampaign() {
                     className="inline-block px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-2xl font-bold rounded-2xl hover:scale-105 transition"
                     onClick={() => setShowTemplateModal(false)}
                   >
-                    ðŸ“ Create New Template
+                    📝 Create New Template
                   </Link>
                 </div>
               ) : (
@@ -307,14 +307,14 @@ export default function CreateCampaign() {
                         <h3 className="text-2xl font-bold text-purple-800 mb-2">{tmp.name}</h3>
                         {tmp.createdAt && (
                           <p className="text-sm text-gray-500 mb-4">
-                            ðŸ“… {new Date(tmp.createdAt).toLocaleDateString('en-US')}
+                            📅 {new Date(tmp.createdAt).toLocaleDateString('en-US')}
                           </p>
                         )}
                         <button
                           onClick={() => handleUseTemplate(tmp)}
                           className="w-full py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-xl font-bold rounded-2xl hover:scale-105 transition"
                         >
-                          âœ¨ Use This Template
+                          ✨ Use This Template
                         </button>
                       </div>
                     </div>
