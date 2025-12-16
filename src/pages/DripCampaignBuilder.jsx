@@ -1,11 +1,7 @@
-// DripCampaignBuilder.jsx - WITH SENDER EMAIL DISPLAY
+// DripCampaignBuilder.jsx - English Version
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
-import { Shield, CheckCircle, Mail } from "lucide-react";
-
-// ✅ Custom domain email
-const SENDER_EMAIL = "noreply@oachxalach.com";
 
 // TiptapEditor component
 function TiptapEditor({ value, onChange }) {
@@ -40,8 +36,8 @@ export default function DripCampaignBuilder() {
 
   const [emailASubject, setEmailASubject] = useState("Thanks for opening our email!");
   const [emailABody, setEmailABody] = useState(`<h2>Special offer just for you!</h2>
-<p>Since you opened the previous email → here's your reward!</p>
-<p><strong>30% off your next order – valid for 48 hours only!</strong></p>
+<p>Since you opened the previous email â†’ here's your reward!</p>
+<p><strong>30% off your next order â€“ valid for 48 hours only!</strong></p>
 <a href="https://yourwebsite.com/offer" style="background:#10b981;color:white;padding:14px 28px;text-decoration:none;border-radius:8px;font-weight:bold;">Claim Your Offer</a>`);
 
   const [emailBSubject, setEmailBSubject] = useState("You're missing out...");
@@ -159,28 +155,6 @@ export default function DripCampaignBuilder() {
         <p className="text-xl text-gray-600 mt-4">Automatically send emails based on user behavior</p>
       </div>
 
-      {/* ✅ NEW: Sender Email Info Box */}
-      <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-300 rounded-3xl p-6 mb-8 shadow-lg">
-        <div className="flex items-start gap-4">
-          <div className="bg-green-500 p-3 rounded-full flex-shrink-0">
-            <Shield size={28} className="text-white" />
-          </div>
-          <div className="flex-1">
-            <h3 className="text-xl font-bold text-green-800 mb-2 flex items-center gap-2">
-              <CheckCircle size={20} className="text-green-600" />
-              Verified Sender Domain
-            </h3>
-            <div className="bg-white border-2 border-green-300 rounded-xl p-3 flex items-center gap-3">
-              <Mail size={20} className="text-green-600 flex-shrink-0" />
-              <div>
-                <p className="text-xs text-gray-600">All drip emails will be sent from:</p>
-                <p className="text-lg font-bold text-green-700 font-mono">{SENDER_EMAIL}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Timeline */}
       <div className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white p-8 rounded-3xl shadow-2xl mb-10">
         <h2 className="text-3xl font-bold text-center mb-8">Automated Drip Campaign Flow</h2>
@@ -191,20 +165,20 @@ export default function DripCampaignBuilder() {
             <p className="text-lg">Send immediately</p>
           </div>
           <div className="text-center">
-            <div className="text-6xl">→</div>
+            <div className="text-6xl">â†’</div>
             <p className="mt-4 text-xl font-bold">Wait {formatWaitTime()}</p>
-            <p className="text-sm opacity-90">→ {nextSendTime}</p>
+            <p className="text-sm opacity-90">â†’ {nextSendTime}</p>
           </div>
           <div className="grid grid-cols-2 gap-6">
             <div className="bg-green-500 bg-opacity-30 backdrop-blur p-4 rounded-2xl text-center border-4 border-green-300">
-              <p className="text-4xl mb-2">✓</p>
+              <p className="text-4xl mb-2">âœ“</p>
               <p className="text-lg font-bold mb-1">Opened</p>
-              <p className="text-xl font-bold">→ Email A</p>
+              <p className="text-xl font-bold">â†’ Email A</p>
             </div>
             <div className="bg-red-500 bg-opacity-30 backdrop-blur p-4 rounded-2xl text-center border-4 border-red-300">
-              <p className="text-4xl mb-2">✗</p>
+              <p className="text-4xl mb-2">âœ—</p>
               <p className="text-lg font-bold mb-1">Not Opened</p>
-              <p className="text-xl font-bold">→ Email B</p>
+              <p className="text-xl font-bold">â†’ Email B</p>
             </div>
           </div>
         </div>
@@ -226,7 +200,7 @@ export default function DripCampaignBuilder() {
         <div className="grid md:grid-cols-3 gap-8">
           {/* EMAIL 1 */}
           <div className="border-2 border-purple-500 rounded-2xl p-6 bg-purple-50">
-            <h3 className="text-2xl font-bold text-purple-700 mb-4">📧 Email 1 – Send now</h3>
+            <h3 className="text-2xl font-bold text-purple-700 mb-4">ðŸ“§ Email 1 â€“ Send now</h3>
             <input type="text" className="w-full p-3 border rounded-lg mb-4 text-lg font-semibold" 
                    placeholder="Subject" value={email1Subject} onChange={e => setEmail1Subject(e.target.value)} required />
             <TiptapEditor value={email1Body} onChange={setEmail1Body} />
@@ -234,7 +208,7 @@ export default function DripCampaignBuilder() {
 
           {/* EMAIL A */}
           <div className="border-2 border-green-500 rounded-2xl p-6 bg-green-50">
-            <h3 className="text-2xl font-bold text-green-700 mb-4">✅ Email A – If opened</h3>
+            <h3 className="text-2xl font-bold text-green-700 mb-4">âœ… Email A â€“ If opened</h3>
             <input type="text" className="w-full p-3 border rounded-lg mb-4 text-lg font-semibold" 
                    placeholder="Subject" value={emailASubject} onChange={e => setEmailASubject(e.target.value)} required />
             <TiptapEditor value={emailABody} onChange={setEmailABody} />
@@ -242,7 +216,7 @@ export default function DripCampaignBuilder() {
 
           {/* EMAIL B */}
           <div className="border-2 border-red-500 rounded-2xl p-6 bg-red-50">
-            <h3 className="text-2xl font-bold text-red-700 mb-4">❌ Email B – If not opened</h3>
+            <h3 className="text-2xl font-bold text-red-700 mb-4">âŒ Email B â€“ If not opened</h3>
             <input type="text" className="w-full p-3 border rounded-lg mb-4 text-lg font-semibold" 
                    placeholder="Subject" value={emailBSubject} onChange={e => setEmailBSubject(e.target.value)} required />
             <TiptapEditor value={emailBBody} onChange={setEmailBBody} />
@@ -251,7 +225,7 @@ export default function DripCampaignBuilder() {
 
         <div className="text-center py-8 bg-gradient-to-br from-purple-50 to-pink-50 rounded-3xl">
           <label className="text-3xl font-bold text-gray-800 block mb-2">
-            ⏱️ How long to wait before sending next email?
+            â±ï¸ How long to wait before sending next email?
           </label>
 
           {/* Quick Presets */}
@@ -334,13 +308,13 @@ export default function DripCampaignBuilder() {
               loading ? "bg-gray-500" : "bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700"
             }`}
           >
-            {loading ? "CREATING DRIP CAMPAIGN..." : "🚀 LAUNCH DRIP CAMPAIGN NOW!"}
+            {loading ? "CREATING DRIP CAMPAIGN..." : "ðŸš€ LAUNCH DRIP CAMPAIGN NOW!"}
           </button>
         </div>
 
         {success && (
           <div className="text-center text-3xl font-bold text-green-600 bg-green-100 p-8 rounded-3xl">
-            ✅ {success}
+            âœ… {success}
             <p className="text-xl mt-4">Redirecting to Dashboard...</p>
           </div>
         )}

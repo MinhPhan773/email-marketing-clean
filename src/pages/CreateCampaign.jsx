@@ -1,13 +1,9 @@
-// src/pages/CreateCampaign.jsx - WITH SENDER EMAIL DISPLAY
+// src/pages/CreateCampaign.jsx
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import TiptapEditor from "../components/TiptapEditor";
-import { LayoutTemplate, Sparkles, Mail, Shield, CheckCircle } from "lucide-react";
+import { LayoutTemplate, Sparkles } from "lucide-react";
 import { cleanupGrapesJSStorage, removeDuplicateTemplates } from '../utils/storageCleanup';
-
-// ✅ Custom domain email
-const SENDER_EMAIL = "noreply@oachxalach.com";
-const SENDER_DOMAIN = "oachxalach.com";
 
 // Validate email
 const isValidEmail = (email) => {
@@ -28,12 +24,14 @@ export default function CreateCampaign() {
   const [savedTemplates, setSavedTemplates] = useState([]);
   const navigate = useNavigate();
 
+  // Load templates from localStorage when page opens
   useEffect(() => {
     cleanupGrapesJSStorage();
     removeDuplicateTemplates();
     loadTemplates();
   }, []);
 
+  // Separate logic to load templates as a function for reload capability
   const loadTemplates = () => {
     const templates = [];
     const seenTemplates = new Set();
@@ -42,11 +40,13 @@ export default function CreateCampaign() {
       if (key && key.startsWith("template_") && !key.startsWith("gjs-")) {
         try {
           const data = JSON.parse(localStorage.getItem(key));
+
           const contentHash = `${data.name}-${(data.html || '').substring(0, 100)}`;
           if (seenTemplates.has(contentHash)) {
             continue;
           }
           seenTemplates.add(contentHash);
+
           templates.push({
             id: key,
             name: data.name || "Untitled Template",
@@ -61,6 +61,7 @@ export default function CreateCampaign() {
       }
     }
     
+    // Sort by creation time (newest first)
     templates.sort((a, b) => {
       if (!a.createdAt) return 1;
       if (!b.createdAt) return -1;
@@ -70,10 +71,13 @@ export default function CreateCampaign() {
     setSavedTemplates(templates);
   };
 
+  // Improved template apply logic
   const handleUseTemplate = (template) => {
+    // Combine HTML + CSS into a complete string
     let fullContent = template.html;
     
     if (template.css && template.css.trim()) {
+      // If HTML already has <style>, replace it; if not, add it
       if (fullContent.includes('<style>')) {
         fullContent = fullContent.replace(/<style>[\s\S]*?<\/style>/g, `<style>${template.css}</style>`);
       } else {
@@ -83,6 +87,7 @@ export default function CreateCampaign() {
     
     setContent(fullContent);
     
+    // Auto-fill subject if empty
     if (!subject) {
       const subjectText = template.name.includes("Template") 
         ? template.name.replace("Template", "").trim() 
@@ -91,8 +96,9 @@ export default function CreateCampaign() {
     }
     
     setShowTemplateModal(false);
-    setSuccessMessage(`✅ Template applied: ${template.name}`);
+    setSuccessMessage(`âœ… Template applied: ${template.name}`);
     
+    // Clear success message after 3 seconds
     setTimeout(() => setSuccessMessage(''), 3000);
   };
 
@@ -107,13 +113,13 @@ export default function CreateCampaign() {
     const invalidEmails = emailList.filter(email => !isValidEmail(email));
 
     if (invalidEmails.length > 0) {
-      setErrorMessage(`❌ Invalid email: ${invalidEmails.join(', ')}. Please check again!`);
+      setErrorMessage(`âŒ Invalid email: ${invalidEmails.join(', ')}. Please check again!`);
       setLoadingSubmit(false);
       return;
     }
 
     if (emailList.length === 0) {
-      setErrorMessage("❌ Please enter at least 1 email!");
+      setErrorMessage("âŒ Please enter at least 1 email!");
       setLoadingSubmit(false);
       return;
     }
@@ -141,14 +147,14 @@ export default function CreateCampaign() {
 
       const data = await response.json();
       if (response.ok) {
-        setSuccessMessage(`🎉 Campaign created successfully! ID: ${data.campaignId}`);
+        setSuccessMessage(`ðŸŽ‰ Campaign created successfully! ID: ${data.campaignId}`);
         setTimeout(() => navigate("/campaigns"), 2500);
       } else {
-        setErrorMessage(`❌ Error: ${data.message || 'Unknown error'}`);
+        setErrorMessage(`âŒ Error: ${data.message || 'Unknown error'}`);
       }
     } catch (error) {
       console.error(error);
-      setErrorMessage('❌ Connection error to API');
+      setErrorMessage('âŒ Connection error to API');
     } finally {
       setLoadingSubmit(false);
     }
@@ -169,52 +175,8 @@ export default function CreateCampaign() {
             to="/drip-builder" 
             className="px-10 py-5 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-2xl font-bold rounded-3xl hover:scale-110 transition shadow-2xl"
           >
-            🚀 Drip Campaign Builder
+            ðŸš€ Drip Campaign Builder
           </Link>
-        </div>
-      </div>
-
-      {/* ✅ NEW: Sender Email Info Box */}
-      <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-300 rounded-3xl p-6 mb-8 shadow-lg">
-        <div className="flex items-start gap-4">
-          <div className="bg-green-500 p-3 rounded-full">
-            <Shield size={32} className="text-white" />
-          </div>
-          <div className="flex-1">
-            <h3 className="text-2xl font-bold text-green-800 mb-2 flex items-center gap-2">
-              <CheckCircle size={24} className="text-green-600" />
-              Verified Sender Domain
-            </h3>
-            <p className="text-gray-700 mb-3">
-              All emails will be sent from our verified domain with full SPF/DKIM/DMARC authentication:
-            </p>
-            <div className="bg-white border-2 border-green-300 rounded-xl p-4 mb-3">
-              <div className="flex items-center gap-3">
-                <Mail size={24} className="text-green-600" />
-                <div>
-                  <p className="text-sm text-gray-600">Sender Email:</p>
-                  <p className="text-xl font-bold text-green-700 font-mono">{SENDER_EMAIL}</p>
-                </div>
-              </div>
-            </div>
-            <div className="grid md:grid-cols-3 gap-3 text-sm">
-              <div className="bg-white rounded-lg p-3 border border-green-200">
-                <p className="text-gray-600 mb-1">✅ SPF</p>
-                <p className="font-semibold text-green-700">Authenticated</p>
-              </div>
-              <div className="bg-white rounded-lg p-3 border border-green-200">
-                <p className="text-gray-600 mb-1">✅ DKIM</p>
-                <p className="font-semibold text-green-700">Signed</p>
-              </div>
-              <div className="bg-white rounded-lg p-3 border border-green-200">
-                <p className="text-gray-600 mb-1">✅ DMARC</p>
-                <p className="font-semibold text-green-700">Protected</p>
-              </div>
-            </div>
-            <p className="text-sm text-gray-600 mt-3 italic">
-              💡 This ensures your emails reach the inbox, not spam folder!
-            </p>
-          </div>
         </div>
       </div>
 
@@ -224,7 +186,7 @@ export default function CreateCampaign() {
         <div className="mb-8 text-center">
           <button
             onClick={() => {
-              loadTemplates();
+              loadTemplates(); // Reload templates when opening modal
               setShowTemplateModal(true);
             }}
             className="inline-flex items-center gap-4 px-12 py-6 bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-3xl font-bold rounded-3xl hover:scale-110 transition-all shadow-2xl"
@@ -235,11 +197,12 @@ export default function CreateCampaign() {
           </button>
           <p className="mt-4 text-lg text-gray-600">Use templates with just 1 click!</p>
           
+          {/* Link to Template Library */}
           <Link 
             to="/templates" 
             className="inline-block mt-3 text-purple-600 hover:underline text-lg font-semibold"
           >
-            📚 Or create new template in Template Library
+            ðŸ“š Or create new template in Template Library
           </Link>
         </div>
 
@@ -277,7 +240,7 @@ export default function CreateCampaign() {
           />
 
           <div>
-            <label className="block text-xl font-bold mb-3">⏰ Schedule send (optional)</label>
+            <label className="block text-xl font-bold mb-3">â° Schedule send (optional)</label>
             <input
               type="datetime-local"
               className="w-full p-5 border-2 border-gray-300 rounded-2xl text-xl"
@@ -298,7 +261,7 @@ export default function CreateCampaign() {
                 : "bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:from-blue-700 hover:to-cyan-700"
             }`}
           >
-            {loadingSubmit ? "⏳ CREATING CAMPAIGN..." : "🚀 CREATE CAMPAIGN NOW"}
+            {loadingSubmit ? "â³ CREATING CAMPAIGN..." : "ðŸš€ CREATE CAMPAIGN NOW"}
           </button>
         </form>
 
@@ -308,7 +271,7 @@ export default function CreateCampaign() {
             <div className="bg-white rounded-3xl shadow-3xl max-w-6xl w-full max-h-[90vh] overflow-y-auto p-10">
               <div className="flex justify-between items-center mb-8">
                 <h2 className="text-5xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                  📚 Choose Saved Template
+                  ðŸ“š Choose Saved Template
                 </h2>
                 <button
                   onClick={() => setShowTemplateModal(false)}
@@ -326,7 +289,7 @@ export default function CreateCampaign() {
                     className="inline-block px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-2xl font-bold rounded-2xl hover:scale-105 transition"
                     onClick={() => setShowTemplateModal(false)}
                   >
-                    📝 Create New Template
+                    ðŸ“ Create New Template
                   </Link>
                 </div>
               ) : (
@@ -344,14 +307,14 @@ export default function CreateCampaign() {
                         <h3 className="text-2xl font-bold text-purple-800 mb-2">{tmp.name}</h3>
                         {tmp.createdAt && (
                           <p className="text-sm text-gray-500 mb-4">
-                            📅 {new Date(tmp.createdAt).toLocaleDateString('en-US')}
+                            ðŸ“… {new Date(tmp.createdAt).toLocaleDateString('en-US')}
                           </p>
                         )}
                         <button
                           onClick={() => handleUseTemplate(tmp)}
                           className="w-full py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-xl font-bold rounded-2xl hover:scale-105 transition"
                         >
-                          ✨ Use This Template
+                          âœ¨ Use This Template
                         </button>
                       </div>
                     </div>
