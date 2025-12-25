@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import React, { useState, useEffect } from 'react';
 import { CognitoUser, AuthenticationDetails } from 'amazon-cognito-identity-js';
 import UserPool from '../cognitoConfig';
+import { Eye, EyeOff } from 'lucide-react'; // Import icons
 
 const Login = () => {
   const navigate = useNavigate();
@@ -12,6 +13,7 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  const [showPassword, setShowPassword] = useState(false); // State cho ẩn/hiện password
 
   useEffect(() => {
     // Check if already logged in
@@ -25,9 +27,15 @@ const Login = () => {
           // Token still valid, redirect to campaigns
           navigate("/campaigns", { replace: true });
           return;
+        } else {
+          // Clean up expired token
+          localStorage.removeItem("token");
+          localStorage.removeItem("user_id");
         }
       } catch (e) {
-        // Invalid token, will be cleared below
+        // Invalid token format
+        localStorage.removeItem("token");
+        localStorage.removeItem("user_id");
       }
     }
 
@@ -99,17 +107,33 @@ const Login = () => {
               required
             />
           </div>
+          
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
-            <input
-              type="password"
-              placeholder="••••••••"
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                placeholder="••••••••"
+                className="w-full p-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? (
+                  <EyeOff className="w-5 h-5" />
+                ) : (
+                  <Eye className="w-5 h-5" />
+                )}
+              </button>
+            </div>
           </div>
+
           <button
             type="submit"
             className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-lg font-semibold hover:scale-105 transition-transform shadow-lg"
