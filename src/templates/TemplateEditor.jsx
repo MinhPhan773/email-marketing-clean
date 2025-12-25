@@ -78,32 +78,32 @@ export default function TemplateEditor() {
     const templates = {
       1: `
         <div style="padding:60px 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); text-align:center; color:white;">
-          <h1 style="font-size:48px; margin-bottom:20px;">✨ Hello {{email}}!</h1>
+          <h1 style="font-size:48px; margin-bottom:20px;">Hello {{email}}!</h1>
           <p style="font-size:24px; margin-bottom:40px;">Welcome to an amazing journey!</p>
           <a href="#" style="background:#fff; color:#667eea; padding:16px 40px; border-radius:50px; font-weight:bold; text-decoration:none;">Get Started</a>
         </div>
       `,
       2: `
         <div style="padding:80px 20px; background: linear-gradient(135deg, #ff0844 0%, #ffb199 100%); text-align:center; color:white;">
-          <h1 style="font-size:60px; font-weight:bold; margin-bottom:20px;">🎉 BLACK FRIDAY SALE 🎉</h1>
+          <h1 style="font-size:60px; font-weight:bold; margin-bottom:20px;">BLACK FRIDAY SALE</h1>
           <p style="font-size:28px; margin-bottom:30px;">Up to 70% OFF - Limited 48 Hours!</p>
           <a href="#" style="background:#fff; color:#ff0844; padding:20px 50px; border-radius:50px; font-weight:bold; text-decoration:none; font-size:24px;">SHOP NOW</a>
         </div>
       `,
       3: `
         <div style="padding:60px 20px; background:#f3f4f6; text-align:center;">
-          <h1 style="font-size:48px; color:#1f2937; margin-bottom:20px;">🛒 You have items in your cart!</h1>
+          <h1 style="font-size:48px; color:#1f2937; margin-bottom:20px;">You have items in your cart!</h1>
           <p style="font-size:24px; color:#6b7280; margin-bottom:40px;">Don't miss 20% OFF when you complete your order today!</p>
           <a href="#" style="background:#10b981; color:white; padding:16px 40px; border-radius:12px; font-weight:bold; text-decoration:none;">Complete Order</a>
         </div>
       `,
       4: `
         <div style="padding:60px 20px; background:white;">
-          <h1 style="font-size:48px; color:#1f2937; text-align:center; margin-bottom:40px;">📰 This Week's Newsletter</h1>
+          <h1 style="font-size:48px; color:#1f2937; text-align:center; margin-bottom:40px;">This Week's Newsletter</h1>
           <div style="max-width:600px; margin:0 auto; line-height:1.8; font-size:18px; color:#374151;">
-            <h2 style="font-size:28px; color:#7c3aed; margin:30px 0 15px;">🔥 Highlights</h2>
+            <h2 style="font-size:28px; color:#7c3aed; margin:30px 0 15px;">Highlights</h2>
             <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore.</p>
-            <h2 style="font-size:28px; color:#7c3aed; margin:30px 0 15px;">💡 Tips & Tricks</h2>
+            <h2 style="font-size:28px; color:#7c3aed; margin:30px 0 15px;">Tips & Tricks</h2>
             <p>Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo.</p>
             <a href="#" style="display:inline-block; margin-top:30px; background:#7c3aed; color:white; padding:14px 32px; border-radius:8px; text-decoration:none; font-weight:bold;">Read More</a>
           </div>
