@@ -1,4 +1,4 @@
-// src/pages/CampaignDetail.jsx
+// src/pages/CampaignDetail.jsx - FIXED: Removed getCampaignDetailLambda dependency
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 
@@ -10,26 +10,8 @@ function CampaignDetail() {
   const [stats, setStats] = useState(null);
   const [resendLoading, setResendLoading] = useState(false);
 
-  const fetchCampaign = async () => {
-    try {
-      console.log("Campaign ID from useParams:", id);
-      const res = await fetch(`https://kbm7qykb6f.execute-api.us-east-1.amazonaws.com/campaigns/${id}`);
-      const dataCampaign = await res.json();
-      console.log("Raw campaign data returned:", JSON.stringify(dataCampaign));
-      if (dataCampaign.emails && dataCampaign.emails.length > 0) {
-        const formattedCampaign = {
-          ...dataCampaign.emails[0],
-          timestamp: dataCampaign.emails[0].timestamp
-        };
-        setCampaign(formattedCampaign);
-      } else {
-        setCampaign(null);
-      }
-    } catch (error) {
-      console.error("Error fetching campaign:", error);
-      setCampaign(null);
-    }
-  };
+  // ❌ REMOVED: fetchCampaign() - không cần nữa vì getCampaignDetailLambda bị xóa
+  // ✅ NEW: Lấy campaign info từ stats và tracking thay vì từ getCampaignDetailLambda
 
   const fetchTracking = async () => {
     try {
@@ -41,6 +23,17 @@ function CampaignDetail() {
         timestamp: item.timestamp
       }));
       setTracking(formattedTracking);
+      
+      // ✅ NEW: Lấy campaign info từ tracking data (nếu có)
+      if (formattedTracking.length > 0) {
+        const firstEvent = formattedTracking[0];
+        // Cập nhật campaign info từ tracking
+        setCampaign(prev => ({
+          ...prev,
+          recipients: firstEvent.recipients || [],
+          campaign_id: firstEvent.campaign_id || `campaign#${id}`
+        }));
+      }
     } catch (error) {
       console.error("Error fetching tracking:", error);
       setTracking([]);
@@ -67,6 +60,13 @@ function CampaignDetail() {
       const data = await res.json();
       console.log("Stats returned from API:", data);
       setStats(data);
+      
+      // ✅ NEW: Set basic campaign info từ stats
+      setCampaign(prev => ({
+        ...prev,
+        campaign_id: `campaign#${id}`,
+        timestamp: data.timestamp
+      }));
     } catch (error) {
       console.error("Detailed error fetching stats:", error);
     } finally {
@@ -75,7 +75,7 @@ function CampaignDetail() {
   };
 
   useEffect(() => {
-    fetchCampaign();
+    // ✅ Chỉ gọi 2 API: tracking + stats
     fetchTracking();
     fetchStats();
   }, [id]);
@@ -118,7 +118,8 @@ function CampaignDetail() {
       }
       const data = await res.json();
       alert(`Resend campaign created successfully: ${data.message}`);
-      await fetchCampaign();
+      
+      // ✅ Refresh data sau khi resend
       await fetchTracking();
       await fetchStats();
     } catch (error) {
@@ -130,75 +131,217 @@ function CampaignDetail() {
   };
 
   if (loading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-purple-600"></div>
+      </div>
+    );
   }
 
-  if (!campaign) {
-    return <div>Campaign not found.</div>;
+  if (!campaign && !stats) {
+    return (
+      <div className="max-w-4xl mx-auto p-4">
+        <div className="bg-red-50 border-2 border-red-200 rounded-xl p-6 text-center">
+          <p className="text-red-600 font-semibold text-lg">Campaign not found.</p>
+          <Link to="/campaigns" className="text-blue-600 hover:underline mt-4 inline-block">
+            ← Back to Campaigns
+          </Link>
+        </div>
+      </div>
+    );
   }
+
+  // ✅ Extract recipients từ tracking events
+  const recipients = tracking.length > 0 
+    ? [...new Set(tracking.flatMap(t => t.recipients || []))]
+    : [];
+
+  // ✅ Get subject/body từ tracking raw_event (nếu có)
+  const getEmailContent = () => {
+    const sendEvent = tracking.find(t => t.event_type === 'Send');
+    if (sendEvent?.raw_event) {
+      try {
+        const parsed = JSON.parse(sendEvent.raw_event);
+        return {
+          subject: parsed.subject || 'N/A',
+          body: parsed.body || 'N/A'
+        };
+      } catch (e) {
+        return { subject: 'N/A', body: 'N/A' };
+      }
+    }
+    return { subject: 'N/A', body: 'N/A' };
+  };
+
+  const emailContent = getEmailContent();
+
+  // ✅ Determine status từ tracking events
+  const getStatus = () => {
+    if (tracking.some(t => t.event_type === 'Click')) return 'CLICKED';
+    if (tracking.some(t => t.event_type === 'Open')) return 'OPENED';
+    if (tracking.some(t => t.event_type === 'Delivery')) return 'SENT';
+    if (tracking.some(t => t.event_type === 'Send')) return 'SENT';
+    if (tracking.some(t => t.event_type === 'Bounce')) return 'FAILED';
+    return 'UNKNOWN';
+  };
+
+  const status = getStatus();
 
   return (
-    <div className="max-w-4xl mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Campaign Details</h1>
+    <div className="max-w-4xl mx-auto p-6">
+      <h1 className="text-3xl font-bold mb-6 text-gray-800">📧 Campaign Details</h1>
 
-      <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-        <p><strong>Recipients:</strong> {campaign.recipients
-          ? (Array.isArray(campaign.recipients) ? campaign.recipients.join(', ') : String(campaign.recipients))
-          : 'No recipients'}
-        </p>
-        <p><strong>Subject:</strong> {campaign.subject}</p>
-        <p><strong>Content:</strong> {campaign.body}</p>
-        <p><strong>Status:</strong> {campaign.status}</p>
-        <p><strong>Time:</strong> {stats?.timestamp || campaign.timestamp}</p>
+      {/* Campaign Info Card */}
+      <div className="bg-white rounded-xl shadow-lg p-6 mb-6 border-2 border-purple-200">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <p className="text-sm text-gray-600 mb-1">Campaign ID</p>
+            <p className="font-mono text-purple-600 font-semibold">
+              {campaign?.campaign_id?.replace('campaign#', '') || id}
+            </p>
+          </div>
+          
+          <div>
+            <p className="text-sm text-gray-600 mb-1">Status</p>
+            <span className={`inline-block px-3 py-1 rounded-full text-sm font-semibold ${
+              status === 'CLICKED' ? 'bg-blue-200 text-blue-800' :
+              status === 'OPENED' ? 'bg-green-200 text-green-800' :
+              status === 'SENT' ? 'bg-green-100 text-green-800' :
+              status === 'FAILED' ? 'bg-red-200 text-red-800' :
+              'bg-gray-200 text-gray-800'
+            }`}>
+              {status}
+            </span>
+          </div>
+        </div>
+
+        <div className="mt-4">
+          <p className="text-sm text-gray-600 mb-1">Recipients ({recipients.length})</p>
+          <p className="text-gray-800">
+            {recipients.length > 0 
+              ? recipients.join(', ') 
+              : 'No recipients data'}
+          </p>
+        </div>
+
+        <div className="mt-4">
+          <p className="text-sm text-gray-600 mb-1">Subject</p>
+          <p className="text-gray-800 font-semibold">{emailContent.subject}</p>
+        </div>
+
+        <div className="mt-4">
+          <p className="text-sm text-gray-600 mb-1">Created At</p>
+          <p className="text-gray-800">{stats?.timestamp || campaign?.timestamp || 'N/A'}</p>
+        </div>
       </div>
 
-      <h2 className="text-xl font-semibold mb-2">Email Response Tracking</h2>
-      <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-        {tracking.length === 0 ? (
-          <p>No response data available.</p>
-        ) : (
-          <ul className="list-disc list-inside">
-            {tracking.map((item, index) => (
-              <li key={index}>
-                {item.event_type} - {item.timestamp}
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-
-      <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-        <h2 className="text-xl font-semibold mb-2">Campaign Statistics</h2>
+      {/* Stats Card */}
+      <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl shadow-lg p-6 mb-6 border-2 border-purple-300">
+        <h2 className="text-xl font-bold mb-4 text-purple-800">📊 Campaign Statistics</h2>
         {stats ? (
-          <>
-            <p><strong>Emails Sent:</strong> {stats.total_sent || 0}</p>
-            <p><strong>Open Rate:</strong> {stats.open_rate ? stats.open_rate.toFixed(2) : 0}%</p>
-            <p><strong>Click Rate:</strong> {stats.click_rate ? stats.click_rate.toFixed(2) : 0}%</p>
-          </>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            <div className="bg-white rounded-lg p-4 shadow">
+              <p className="text-gray-600 text-sm mb-1">Emails Sent</p>
+              <p className="text-3xl font-bold text-purple-600">{stats.total_sent || 0}</p>
+            </div>
+            <div className="bg-white rounded-lg p-4 shadow">
+              <p className="text-gray-600 text-sm mb-1">Open Rate</p>
+              <p className="text-3xl font-bold text-green-600">
+                {stats.open_rate ? stats.open_rate.toFixed(1) : 0}%
+              </p>
+            </div>
+            <div className="bg-white rounded-lg p-4 shadow">
+              <p className="text-gray-600 text-sm mb-1">Click Rate</p>
+              <p className="text-3xl font-bold text-blue-600">
+                {stats.click_rate ? stats.click_rate.toFixed(1) : 0}%
+              </p>
+            </div>
+          </div>
         ) : (
-          <p>No statistics available.</p>
+          <p className="text-gray-600">No statistics available.</p>
         )}
       </div>
 
-      <div className="mt-4 flex space-x-4">
-        <Link to="/campaigns" className="text-blue-600 hover:underline"> {/* Thay đổi từ "/" thành "/campaigns" */}
-          ← Back to List
+      {/* Tracking Events Card */}
+      <div className="bg-white rounded-xl shadow-lg p-6 mb-6 border-2 border-gray-200">
+        <h2 className="text-xl font-bold mb-4 text-gray-800">📈 Email Response Tracking</h2>
+        {tracking.length === 0 ? (
+          <p className="text-gray-600">No tracking data available yet.</p>
+        ) : (
+          <div className="space-y-3">
+            {tracking.map((item, index) => {
+              const eventIcons = {
+                'Send': '📤',
+                'Delivery': '✅',
+                'Open': '👁️',
+                'Click': '🖱️',
+                'Bounce': '❌',
+                'Complaint': '⚠️',
+                'Unverified': '🔒'
+              };
+              
+              const eventColors = {
+                'Send': 'bg-blue-50 border-blue-200',
+                'Delivery': 'bg-green-50 border-green-200',
+                'Open': 'bg-green-100 border-green-300',
+                'Click': 'bg-blue-100 border-blue-300',
+                'Bounce': 'bg-red-50 border-red-200',
+                'Complaint': 'bg-orange-50 border-orange-200',
+                'Unverified': 'bg-yellow-50 border-yellow-200'
+              };
+
+              return (
+                <div 
+                  key={index} 
+                  className={`flex items-center gap-3 p-3 rounded-lg border-2 ${
+                    eventColors[item.event_type] || 'bg-gray-50 border-gray-200'
+                  }`}
+                >
+                  <span className="text-2xl">{eventIcons[item.event_type] || '📋'}</span>
+                  <div className="flex-1">
+                    <p className="font-semibold text-gray-800">{item.event_type}</p>
+                    <p className="text-sm text-gray-600">
+                      {Array.isArray(item.recipients) ? item.recipients.join(', ') : item.recipient_primary}
+                    </p>
+                  </div>
+                  <p className="text-sm text-gray-500">{item.timestamp}</p>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Action Buttons */}
+      <div className="flex flex-col sm:flex-row gap-4">
+        <Link 
+          to="/campaigns" 
+          className="flex items-center justify-center gap-2 px-6 py-3 bg-gray-200 text-gray-800 rounded-xl font-semibold hover:bg-gray-300 transition"
+        >
+          ← Back to Campaigns
         </Link>
+        
         <button
           onClick={handleResendUnopened}
           disabled={resendLoading}
-          className={`px-4 py-2 rounded flex items-center ${resendLoading ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
+          className={`flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold transition ${
+            resendLoading 
+              ? 'bg-gray-400 text-gray-200 cursor-not-allowed' 
+              : 'bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:scale-105 shadow-lg'
+          }`}
         >
           {resendLoading ? (
             <>
-              <svg className="animate-spin h-5 w-5 mr-2" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8h8a8 8 0 01-16 0z" />
               </svg>
               Sending...
             </>
           ) : (
-            "Resend to Unopened"
+            <>
+              🔄 Resend to Unopened
+            </>
           )}
         </button>
       </div>
