@@ -10,8 +10,34 @@ function CampaignDetail() {
   const [stats, setStats] = useState(null);
   const [resendLoading, setResendLoading] = useState(false);
 
-  // ❌ REMOVED: fetchCampaign() - không cần nữa vì getCampaignDetailLambda bị xóa
-  // ✅ NEW: Lấy campaign info từ stats và tracking thay vì từ getCampaignDetailLambda
+  // ✅ NEW: Fetch campaign basic info từ getCampaignsLambda
+  const fetchCampaignInfo = async () => {
+    try {
+      const userId = localStorage.getItem('user_id');
+      if (!userId) return;
+      
+      const res = await fetch(`https://kbm7qykb6f.execute-api.us-east-1.amazonaws.com/campaigns?user_id=${userId}`);
+      const data = await res.json();
+      
+      // Tìm campaign theo ID
+      const fullCampaignId = `campaign#${id}`;
+      const campaignData = data.campaigns?.find(c => c.campaign_id === fullCampaignId);
+      
+      if (campaignData) {
+        console.log("Found campaign data:", campaignData);
+        setCampaign({
+          campaign_id: campaignData.campaign_id,
+          subject: campaignData.subject || 'N/A',
+          body: campaignData.body || 'N/A',
+          recipients: campaignData.recipients || [],
+          status: campaignData.status || 'UNKNOWN',
+          timestamp: campaignData.timestamp
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching campaign info:", error);
+    }
+  };
 
   const fetchTracking = async () => {
     try {
@@ -23,17 +49,6 @@ function CampaignDetail() {
         timestamp: item.timestamp
       }));
       setTracking(formattedTracking);
-      
-      // ✅ NEW: Lấy campaign info từ tracking data (nếu có)
-      if (formattedTracking.length > 0) {
-        const firstEvent = formattedTracking[0];
-        // Cập nhật campaign info từ tracking
-        setCampaign(prev => ({
-          ...prev,
-          recipients: firstEvent.recipients || [],
-          campaign_id: firstEvent.campaign_id || `campaign#${id}`
-        }));
-      }
     } catch (error) {
       console.error("Error fetching tracking:", error);
       setTracking([]);
@@ -60,13 +75,6 @@ function CampaignDetail() {
       const data = await res.json();
       console.log("Stats returned from API:", data);
       setStats(data);
-      
-      // ✅ NEW: Set basic campaign info từ stats
-      setCampaign(prev => ({
-        ...prev,
-        campaign_id: `campaign#${id}`,
-        timestamp: data.timestamp
-      }));
     } catch (error) {
       console.error("Detailed error fetching stats:", error);
     } finally {
@@ -75,7 +83,8 @@ function CampaignDetail() {
   };
 
   useEffect(() => {
-    // ✅ Chỉ gọi 2 API: tracking + stats
+    // ✅ Gọi 3 API: campaign info + tracking + stats
+    fetchCampaignInfo();
     fetchTracking();
     fetchStats();
   }, [id]);
@@ -120,6 +129,7 @@ function CampaignDetail() {
       alert(`Resend campaign created successfully: ${data.message}`);
       
       // ✅ Refresh data sau khi resend
+      await fetchCampaignInfo();
       await fetchTracking();
       await fetchStats();
     } catch (error) {
@@ -151,32 +161,14 @@ function CampaignDetail() {
     );
   }
 
-  // ✅ Extract recipients từ tracking events
-  const recipients = tracking.length > 0 
-    ? [...new Set(tracking.flatMap(t => t.recipients || []))]
-    : [];
+  // ✅ Extract recipients từ campaign data
+  const recipients = campaign?.recipients || [];
 
-  // ✅ Get subject/body từ tracking raw_event (nếu có)
-  const getEmailContent = () => {
-    const sendEvent = tracking.find(t => t.event_type === 'Send');
-    if (sendEvent?.raw_event) {
-      try {
-        const parsed = JSON.parse(sendEvent.raw_event);
-        return {
-          subject: parsed.subject || 'N/A',
-          body: parsed.body || 'N/A'
-        };
-      } catch (e) {
-        return { subject: 'N/A', body: 'N/A' };
-      }
-    }
-    return { subject: 'N/A', body: 'N/A' };
-  };
-
-  const emailContent = getEmailContent();
-
-  // ✅ Determine status từ tracking events
+  // ✅ Determine status (ưu tiên status từ campaign data, fallback từ tracking)
   const getStatus = () => {
+    if (campaign?.status) return campaign.status;
+    
+    // Fallback: determine từ tracking events
     if (tracking.some(t => t.event_type === 'Click')) return 'CLICKED';
     if (tracking.some(t => t.event_type === 'Open')) return 'OPENED';
     if (tracking.some(t => t.event_type === 'Delivery')) return 'SENT';
@@ -219,19 +211,32 @@ function CampaignDetail() {
           <p className="text-sm text-gray-600 mb-1">Recipients ({recipients.length})</p>
           <p className="text-gray-800">
             {recipients.length > 0 
-              ? recipients.join(', ') 
+              ? (Array.isArray(recipients) ? recipients.join(', ') : String(recipients))
               : 'No recipients data'}
           </p>
         </div>
 
         <div className="mt-4">
           <p className="text-sm text-gray-600 mb-1">Subject</p>
-          <p className="text-gray-800 font-semibold">{emailContent.subject}</p>
+          <p className="text-gray-800 font-semibold">{campaign?.subject || 'N/A'}</p>
         </div>
 
         <div className="mt-4">
           <p className="text-sm text-gray-600 mb-1">Created At</p>
           <p className="text-gray-800">{stats?.timestamp || campaign?.timestamp || 'N/A'}</p>
+        </div>
+      </div>
+
+      {/* ✅ NEW: Email Content Card */}
+      <div className="bg-white rounded-xl shadow-lg p-6 mb-6 border-2 border-indigo-200">
+        <h2 className="text-xl font-bold mb-4 text-indigo-800 flex items-center gap-2">
+          📧 Email Content
+        </h2>
+        <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
+          <div 
+            className="prose prose-sm max-w-none"
+            dangerouslySetInnerHTML={{ __html: campaign?.body || '<p class="text-gray-500 italic">No content available</p>' }}
+          />
         </div>
       </div>
 
