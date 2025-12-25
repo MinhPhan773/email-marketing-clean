@@ -18,9 +18,6 @@ export default function TemplateEditor() {
   useEffect(() => {
     if (!editorRef.current || editor) return;
 
-    // IMPORTANT: Clear localStorage before init to avoid conflicts
-    const storageId = `gjs-template-${templateId || 'new'}`;
-    
     // Clear old GrapesJS storage
     Object.keys(localStorage).forEach(key => {
       if (key.startsWith('gjs-')) {
@@ -35,9 +32,9 @@ export default function TemplateEditor() {
       fromElement: false,
       storageManager: { 
         type: "local", 
-        autosave: false,  // Disable autosave
-        autoload: false,  // Disable autoload
-        id: storageId
+        autosave: false,
+        autoload: false,
+        id: `gjs-template-${templateId || 'new'}`
       },
       plugins: [grapesjsPresetWebpage],
       pluginsOpts: {
@@ -73,41 +70,194 @@ export default function TemplateEditor() {
     };
   }, [templateId]);
 
-  // Separate template content logic into function
+  // ✅ FIX: Thêm đầy đủ 6 templates
   const getTemplateContent = (id) => {
     const templates = {
+      // 1. WELCOME EMAIL
       1: `
-        <div style="padding:60px 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); text-align:center; color:white;">
-          <h1 style="font-size:48px; margin-bottom:20px;">Hello {{email}}!</h1>
-          <p style="font-size:24px; margin-bottom:40px;">Welcome to an amazing journey!</p>
-          <a href="#" style="background:#fff; color:#667eea; padding:16px 40px; border-radius:50px; font-weight:bold; text-decoration:none;">Get Started</a>
-        </div>
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f8f9fa;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
+          <tr><td align="center" style="padding:60px 20px;">
+            <table width="600" cellpadding="0" cellspacing="0" border="0" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+              <tr><td style="padding:50px 40px;text-align:center;border-bottom:1px solid #e9ecef;">
+                <h1 style="font-size:36px;font-weight:600;color:#1a1a1a;margin:0 0 12px;letter-spacing:-0.5px;">Welcome to Our Community</h1>
+                <p style="font-size:18px;color:#6c757d;margin:0;line-height:1.6;">We're excited to have you on board</p>
+              </td></tr>
+              <tr><td style="padding:40px;">
+                <p style="font-size:16px;color:#495057;line-height:1.8;margin:0 0 30px;">
+                  Thank you for joining us. You're now part of a community that values quality, innovation, and excellence.
+                </p>
+                <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                  <tr><td align="center">
+                    <a href="#" style="display:inline-block;background:#0066cc;color:#ffffff;padding:16px 48px;text-decoration:none;font-weight:600;border-radius:8px;font-size:16px;">Get Started Now</a>
+                  </td></tr>
+                </table>
+              </td></tr>
+            </table>
+          </td></tr>
+        </table>
       `,
+      
+      // 2. PROMOTIONAL EMAIL
       2: `
-        <div style="padding:80px 20px; background: linear-gradient(135deg, #ff0844 0%, #ffb199 100%); text-align:center; color:white;">
-          <h1 style="font-size:60px; font-weight:bold; margin-bottom:20px;">BLACK FRIDAY SALE</h1>
-          <p style="font-size:28px; margin-bottom:30px;">Up to 70% OFF - Limited 48 Hours!</p>
-          <a href="#" style="background:#fff; color:#ff0844; padding:20px 50px; border-radius:50px; font-weight:bold; text-decoration:none; font-size:24px;">SHOP NOW</a>
-        </div>
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f8f9fa;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
+          <tr><td align="center" style="padding:60px 20px;">
+            <table width="600" cellpadding="0" cellspacing="0" border="0" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+              <tr><td style="background:#0066cc;padding:30px 40px;text-align:center;">
+                <p style="font-size:14px;color:#ffffff;margin:0 0 8px;text-transform:uppercase;letter-spacing:1px;font-weight:600;">Limited Time Offer</p>
+                <h1 style="font-size:42px;font-weight:700;color:#ffffff;margin:0;letter-spacing:-1px;">Save 30% Today</h1>
+              </td></tr>
+              <tr><td style="padding:40px;">
+                <p style="font-size:18px;color:#495057;line-height:1.8;margin:0 0 30px;text-align:center;">
+                  Don't miss out on this exclusive opportunity to save on all our premium products.
+                </p>
+                <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                  <tr><td align="center">
+                    <a href="#" style="display:inline-block;background:#0066cc;color:#ffffff;padding:18px 60px;text-decoration:none;font-weight:600;border-radius:8px;font-size:18px;">Shop Now</a>
+                  </td></tr>
+                </table>
+              </td></tr>
+            </table>
+          </td></tr>
+        </table>
       `,
+      
+      // 3. ABANDONED CART
       3: `
-        <div style="padding:60px 20px; background:#f3f4f6; text-align:center;">
-          <h1 style="font-size:48px; color:#1f2937; margin-bottom:20px;">You have items in your cart!</h1>
-          <p style="font-size:24px; color:#6b7280; margin-bottom:40px;">Don't miss 20% OFF when you complete your order today!</p>
-          <a href="#" style="background:#10b981; color:white; padding:16px 40px; border-radius:12px; font-weight:bold; text-decoration:none;">Complete Order</a>
-        </div>
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f8f9fa;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
+          <tr><td align="center" style="padding:60px 20px;">
+            <table width="600" cellpadding="0" cellspacing="0" border="0" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+              <tr><td style="padding:40px 40px 30px;">
+                <h1 style="font-size:32px;font-weight:600;color:#1a1a1a;margin:0 0 12px;letter-spacing:-0.5px;">Your Cart is Waiting</h1>
+                <p style="font-size:16px;color:#6c757d;margin:0;line-height:1.6;">Complete your purchase before these items are gone</p>
+              </td></tr>
+              <tr><td style="padding:0 40px 40px;">
+                <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                  <tr><td align="center">
+                    <a href="#" style="display:inline-block;background:#0066cc;color:#ffffff;padding:16px 48px;text-decoration:none;font-weight:600;border-radius:8px;font-size:16px;">Complete My Order</a>
+                  </td></tr>
+                </table>
+              </td></tr>
+            </table>
+          </td></tr>
+        </table>
       `,
+      
+      // 4. NEWSLETTER
       4: `
-        <div style="padding:60px 20px; background:white;">
-          <h1 style="font-size:48px; color:#1f2937; text-align:center; margin-bottom:40px;">This Week's Newsletter</h1>
-          <div style="max-width:600px; margin:0 auto; line-height:1.8; font-size:18px; color:#374151;">
-            <h2 style="font-size:28px; color:#7c3aed; margin:30px 0 15px;">Highlights</h2>
-            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore.</p>
-            <h2 style="font-size:28px; color:#7c3aed; margin:30px 0 15px;">Tips & Tricks</h2>
-            <p>Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo.</p>
-            <a href="#" style="display:inline-block; margin-top:30px; background:#7c3aed; color:white; padding:14px 32px; border-radius:8px; text-decoration:none; font-weight:bold;">Read More</a>
-          </div>
-        </div>
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f8f9fa;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
+          <tr><td align="center" style="padding:60px 20px;">
+            <table width="600" cellpadding="0" cellspacing="0" border="0" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+              <tr><td style="padding:40px 40px 30px;border-bottom:3px solid #0066cc;">
+                <h1 style="font-size:32px;font-weight:600;color:#1a1a1a;margin:0 0 8px;letter-spacing:-0.5px;">This Week's Highlights</h1>
+                <p style="font-size:15px;color:#6c757d;margin:0;">Your weekly dose of insights and updates</p>
+              </td></tr>
+              <tr><td style="padding:35px 40px;">
+                <h2 style="font-size:22px;color:#1a1a1a;margin:0 0 15px;font-weight:600;">Featured Article</h2>
+                <p style="font-size:16px;color:#495057;line-height:1.8;margin:0 0 20px;">
+                  Discover the latest trends and best practices that are shaping the industry.
+                </p>
+                <a href="#" style="color:#0066cc;text-decoration:none;font-weight:600;font-size:15px;">Read More</a>
+              </td></tr>
+            </table>
+          </td></tr>
+        </table>
+      `,
+      
+      // 5. ORDER CONFIRMATION
+      5: `
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f8f9fa;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
+          <tr><td align="center" style="padding:60px 20px;">
+            <table width="600" cellpadding="0" cellspacing="0" border="0" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+              <tr><td style="padding:40px 40px 30px;text-align:center;background:#e8f5e9;">
+                <h1 style="font-size:36px;font-weight:600;color:#2e7d32;margin:0 0 8px;">Order Confirmed!</h1>
+                <p style="font-size:16px;color:#558b2f;margin:0;">Thank you for your purchase</p>
+              </td></tr>
+              <tr><td style="padding:35px 40px;">
+                <p style="font-size:16px;color:#495057;margin:0 0 25px;line-height:1.7;">
+                  Hi <strong>Customer Name</strong>,<br>Your order has been confirmed and will be shipped soon.
+                </p>
+                <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f8f9fa;border-radius:8px;padding:20px;margin:0 0 30px;">
+                  <tr>
+                    <td>
+                      <p style="font-size:14px;color:#6c757d;margin:0 0 5px;">Order Number</p>
+                      <p style="font-size:18px;color:#1a1a1a;margin:0;font-weight:600;">#ORD-12345</p>
+                    </td>
+                    <td align="right">
+                      <p style="font-size:14px;color:#6c757d;margin:0 0 5px;">Order Date</p>
+                      <p style="font-size:16px;color:#1a1a1a;margin:0;font-weight:600;">Dec 25, 2025</p>
+                    </td>
+                  </tr>
+                </table>
+                <h2 style="font-size:20px;color:#1a1a1a;margin:0 0 20px;font-weight:600;">Order Details</h2>
+                <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-top:1px solid #e9ecef;border-bottom:1px solid #e9ecef;margin:0 0 25px;">
+                  <tr>
+                    <td style="padding:20px 0;border-bottom:1px solid #e9ecef;">
+                      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                        <tr>
+                          <td width="70%">
+                            <p style="font-size:16px;color:#1a1a1a;margin:0;font-weight:600;">Product Name</p>
+                            <p style="font-size:14px;color:#6c757d;margin:5px 0 0;">Qty: 1</p>
+                          </td>
+                          <td width="30%" align="right">
+                            <p style="font-size:16px;color:#1a1a1a;margin:0;font-weight:600;">$99.00</p>
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding:20px 0;">
+                      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                        <tr>
+                          <td width="70%">
+                            <p style="font-size:18px;color:#1a1a1a;margin:0;font-weight:700;">Total</p>
+                          </td>
+                          <td width="30%" align="right">
+                            <p style="font-size:20px;color:#2e7d32;margin:0;font-weight:700;">$99.00</p>
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                </table>
+                <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                  <tr><td align="center">
+                    <a href="#" style="display:inline-block;background:#0066cc;color:#ffffff;padding:16px 40px;text-decoration:none;font-weight:600;border-radius:8px;font-size:16px;">Track Your Order</a>
+                  </td></tr>
+                </table>
+              </td></tr>
+              <tr><td style="padding:30px 40px;background:#f8f9fa;border-top:1px solid #e9ecef;text-align:center;">
+                <p style="font-size:14px;color:#6c757d;margin:0;">Questions? Contact us at <a href="mailto:support@oachxalach.com" style="color:#0066cc;text-decoration:none;">support@oachxalach.com</a></p>
+              </td></tr>
+            </table>
+          </td></tr>
+        </table>
+      `,
+      
+      // 6. FEEDBACK REQUEST
+      6: `
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f8f9fa;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
+          <tr><td align="center" style="padding:60px 20px;">
+            <table width="600" cellpadding="0" cellspacing="0" border="0" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+              <tr><td style="padding:40px;text-align:center;">
+                <h1 style="font-size:32px;font-weight:600;color:#1a1a1a;margin:0 0 15px;letter-spacing:-0.5px;">We Value Your Opinion</h1>
+                <p style="font-size:16px;color:#6c757d;margin:0 0 35px;line-height:1.6;">Help us improve by sharing your experience</p>
+                <p style="font-size:15px;color:#495057;line-height:1.7;margin:0 0 35px;">
+                  Your feedback matters to us. Take 2 minutes to let us know how we're doing and help us serve you better.
+                </p>
+                <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 35px;">
+                  <tr><td align="center">
+                    <a href="#" style="display:inline-block;background:#0066cc;color:#ffffff;padding:16px 48px;text-decoration:none;font-weight:600;border-radius:8px;font-size:16px;">Share Feedback</a>
+                  </td></tr>
+                </table>
+                <p style="font-size:14px;color:#6c757d;margin:0;">Takes less than 2 minutes</p>
+              </td></tr>
+              <tr><td style="padding:30px 40px;background:#f8f9fa;border-top:1px solid #e9ecef;text-align:center;">
+                <p style="font-size:13px;color:#6c757d;margin:0;">Thank you for being a valued customer</p>
+              </td></tr>
+            </table>
+          </td></tr>
+        </table>
       `
     };
 
@@ -122,27 +272,22 @@ export default function TemplateEditor() {
     const css = editor.getCss();
     const timestamp = Date.now();
     
-    // Save with unique timestamp
     const savedTemplate = {
       html, 
       css, 
       name: templateName,
       createdAt: new Date().toISOString(),
-      templateId: templateId || 'custom' // Track original template ID
+      templateId: templateId || 'custom'
     };
     
     localStorage.setItem(`template_${timestamp}`, JSON.stringify(savedTemplate));
     
-    // Success feedback
-    alert("✅ Template saved successfully!");
+    alert("Template saved successfully!");
     setIsSaving(false);
-    
-    // Optional: Navigate to templates page
-    // setTimeout(() => navigate('/templates'), 1500);
   };
 
   const handleClearCanvas = () => {
-    if (editor && window.confirm("⚠️ Clear all content and start over?")) {
+    if (editor && window.confirm("Clear all content and start over?")) {
       editor.setComponents('');
       editor.setStyle('');
     }
@@ -160,7 +305,7 @@ export default function TemplateEditor() {
             <ArrowLeft size={28} />
           </button>
           <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-            ✨ {templateName}
+            {templateName}
           </h1>
         </div>
 
@@ -176,7 +321,7 @@ export default function TemplateEditor() {
           
           <button 
             className="px-6 py-3 bg-gray-200 rounded-xl font-bold flex items-center gap-3 hover:bg-gray-300 transition"
-            onClick={() => alert("💡 Version Control feature is under development!")}
+            onClick={() => alert("Version Control feature is under development!")}
           >
             <History size={24} />
             Version
