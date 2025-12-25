@@ -1,17 +1,14 @@
 // src/pages/CampaignDetail.jsx - FIXED: Removed getCampaignDetailLambda dependency
-// Version: 2.0 - Updated to use getCampaignsLambda for subject/body
 import { useEffect, useState } from "react";
-import { useParams, Link, useLocation } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 
 function CampaignDetail() {
   const { id } = useParams();
-  const location = useLocation();
   const [campaign, setCampaign] = useState(null);
   const [tracking, setTracking] = useState([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState(null);
   const [resendLoading, setResendLoading] = useState(false);
-  const [forceUpdate, setForceUpdate] = useState(0);
 
   // ✅ NEW: Fetch campaign basic info từ getCampaignsLambda
   const fetchCampaignInfo = async () => {
@@ -87,16 +84,10 @@ function CampaignDetail() {
 
   useEffect(() => {
     // ✅ Gọi 3 API: campaign info + tracking + stats
-    // Reset state trước khi fetch
-    setLoading(true);
-    setCampaign(null);
-    setTracking([]);
-    setStats(null);
-    
     fetchCampaignInfo();
     fetchTracking();
     fetchStats();
-  }, [id, location.key]); // ✅ Re-fetch khi ID hoặc location thay đổi
+  }, [id]);
 
   useEffect(() => {
     const interval = setInterval(fetchStats, 30000); // Refresh every 30 seconds
@@ -189,7 +180,7 @@ function CampaignDetail() {
   const status = getStatus();
 
   return (
-    <div className="max-w-4xl mx-auto p-6" key={`campaign-${id}-${forceUpdate}`}>
+    <div className="max-w-4xl mx-auto p-6">
       <h1 className="text-3xl font-bold mb-6 text-gray-800">📧 Campaign Details</h1>
 
       {/* Campaign Info Card */}
