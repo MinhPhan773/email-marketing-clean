@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { jwtDecode } from "jwt-decode";
-import { Edit3, BarChart3, LogOut, User, Mail, Menu, X } from "lucide-react";
+import { Menu, X } from "lucide-react";
 
 const Navbar = () => {
   const navigate = useNavigate();
@@ -13,7 +13,7 @@ const Navbar = () => {
 
   useEffect(() => {
     checkAuth();
-  }, [location.pathname]); // Re-check on route change
+  }, [location.pathname]);
 
   const checkAuth = () => {
     const token = localStorage.getItem('token');
@@ -26,7 +26,6 @@ const Navbar = () => {
           setIsAuthenticated(true);
           setEmail(decoded.email || decoded.username || 'User');
         } else {
-          // Token expired
           handleLogout(false);
         }
       } catch (err) {
@@ -51,24 +50,23 @@ const Navbar = () => {
 
   const isDripDashboard = location.pathname === '/drip-dashboard';
   const isActive = (path) => location.pathname === path;
-
+  
   return (
     <nav className="bg-white shadow-lg border-b-4 border-gradient-to-r from-purple-600 to-pink-600">
       <div className="max-w-7xl mx-auto px-6 py-4">
         <div className="flex justify-between items-center">
           <Link 
             to={isAuthenticated ? "/campaigns" : "/login"}
-            className="flex items-center gap-3 text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent hover:scale-105 transition-transform"
+            className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent hover:scale-105 transition-transform mr-8"
           >
-            <Mail size={40} className="text-purple-600" />
             <span className="hidden sm:inline">Email Marketing</span>
             <span className="sm:hidden">EMP</span>
           </Link>
 
           {isAuthenticated ? (
             <>
-              <div className="hidden lg:flex items-center gap-6">
-                <div className="flex items-center gap-6">
+              <div className="hidden lg:flex items-center gap-8">
+                <div className="flex items-center gap-8">
                   <Link 
                     to="/campaigns" 
                     className={`text-lg font-semibold transition-all ${
@@ -77,7 +75,7 @@ const Navbar = () => {
                         : 'text-gray-700 hover:text-purple-600'
                     }`}
                   >
-                    📧 Campaigns
+                    Campaigns
                   </Link>
                   <Link 
                     to="/create" 
@@ -87,7 +85,7 @@ const Navbar = () => {
                         : 'text-gray-700 hover:text-purple-600'
                     }`}
                   >
-                    ✨ Create
+                    Create
                   </Link>
                   <Link 
                     to="/drip-builder" 
@@ -97,40 +95,38 @@ const Navbar = () => {
                         : 'text-gray-700 hover:text-purple-600'
                     }`}
                   >
-                    🚀 Drip Builder
+                    Drip Builder
                   </Link>
                 </div>
 
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-6 ml-8">
                   <Link
                     to="/templates"
-                    className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-lg font-bold rounded-xl hover:scale-105 transition-all shadow-lg"
+                    className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-lg font-semibold rounded-xl hover:scale-105 transition-all shadow-lg"
                   >
-                    <Edit3 size={24} />
                     Templates
                   </Link>
 
-                  {!isDripDashboard && (
-                    <button
-                      onClick={() => navigate("/drip-dashboard")}
-                      className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-lg font-bold rounded-xl hover:scale-105 transition-all shadow-lg"
-                    >
-                      <BarChart3 size={24} />
-                      Dashboard
-                    </button>
-                  )}
+                  <Link
+                    to="/drip-dashboard"
+                    className={`px-6 py-3 text-lg font-semibold rounded-xl shadow-lg transition-all ${
+                      isDripDashboard
+                        ? "bg-purple-700 text-white scale-105"
+                        : "bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:scale-105"
+                    }`}
+                  >
+                    Dashboard
+                  </Link>
                 </div>
 
-                <div className="flex items-center gap-4 ml-4 pl-4 border-l-2 border-gray-300">
-                  <div className="flex items-center gap-2 bg-gray-100 px-4 py-2 rounded-lg">
-                    <User size={20} className="text-purple-600" />
+                <div className="flex items-center gap-4 ml-8 pl-8 border-l-2 border-gray-300">
+                  <div className="bg-gray-100 px-4 py-2 rounded-lg">
                     <span className="text-sm font-medium text-gray-700">{email}</span>
                   </div>
                   <button
                     onClick={() => handleLogout(true)}
-                    className="flex items-center gap-2 bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition font-medium"
+                    className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition font-medium"
                   >
-                    <LogOut size={18} />
                     Logout
                   </button>
                 </div>
@@ -172,7 +168,7 @@ const Navbar = () => {
                   : 'text-gray-700 hover:bg-gray-100'
               }`}
             >
-              📧 Campaigns
+              Campaigns
             </Link>
             <Link 
               to="/create" 
@@ -183,7 +179,7 @@ const Navbar = () => {
                   : 'text-gray-700 hover:bg-gray-100'
               }`}
             >
-              ✨ Create Campaign
+              Create Campaign
             </Link>
             <Link 
               to="/drip-builder" 
@@ -194,36 +190,35 @@ const Navbar = () => {
                   : 'text-gray-700 hover:bg-gray-100'
               }`}
             >
-              🚀 Drip Builder
+              Drip Builder
             </Link>
             <Link 
               to="/templates" 
               onClick={() => setMobileMenuOpen(false)}
-              className="block px-4 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold rounded-lg hover:scale-105 transition text-center"
+              className="block px-4 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-lg hover:scale-105 transition text-center"
             >
-              <Edit3 size={20} className="inline mr-2" />
               Templates
             </Link>
-            {!isDripDashboard && (
-              <button
-                onClick={() => { navigate("/drip-dashboard"); setMobileMenuOpen(false); }}
-                className="w-full px-4 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold rounded-lg hover:scale-105 transition text-center"
-              >
-                <BarChart3 size={20} className="inline mr-2" />
-                Dashboard
-              </button>
-            )}
+            <Link
+              to="/drip-dashboard"
+              onClick={() => setMobileMenuOpen(false)}
+              className={`block px-4 py-3 rounded-lg font-semibold transition text-center ${
+                isDripDashboard
+                  ? "bg-purple-600 text-white"
+                  : "bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:scale-105"
+              }`}
+            >
+              Dashboard
+            </Link>
 
             <div className="mt-6 pt-4 border-t-2 border-gray-200">
-              <div className="flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-lg mb-3">
-                <User size={20} className="text-purple-600" />
+              <div className="bg-gray-100 px-4 py-2 rounded-lg mb-3">
                 <span className="text-sm font-medium text-gray-700">{email}</span>
               </div>
               <button
                 onClick={() => handleLogout(true)}
-                className="w-full flex items-center justify-center gap-2 bg-red-500 text-white px-4 py-3 rounded-lg hover:bg-red-600 transition font-bold"
+                className="w-full bg-red-500 text-white px-4 py-3 rounded-lg hover:bg-red-600 transition font-semibold"
               >
-                <LogOut size={20} />
                 Logout
               </button>
             </div>
