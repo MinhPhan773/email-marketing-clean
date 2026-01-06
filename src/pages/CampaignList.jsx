@@ -1,7 +1,7 @@
-// src/pages/CampaignList.jsx - Updated UI
+// src/pages/CampaignList.jsx - Single page version
 import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Plus, Zap, TrendingUp, Mail, Search, AlertCircle } from "lucide-react";
+import { Plus, Zap, TrendingUp, Search, AlertCircle } from "lucide-react";
 
 export default function CampaignList() {
   const [campaigns, setCampaigns] = useState([]);
@@ -145,69 +145,6 @@ export default function CampaignList() {
     campaign.campaign_id?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  if (!loading && campaigns.length === 0) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 p-6">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center py-16">
-            <div className="mb-6">
-              <Mail size={80} className="mx-auto text-purple-300" />
-            </div>
-            <h1 className="text-3xl font-bold text-gray-800 mb-3">
-              Welcome to Email Marketing Platform!
-            </h1>
-            <p className="text-lg text-gray-600 mb-10">
-              You haven't created any campaigns yet. Let's get started!
-            </p>
-
-            <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-              <div className="bg-white rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all hover:scale-105">
-                <div className="text-4xl mb-3">📧</div>
-                <h3 className="text-xl font-bold text-gray-800 mb-2">
-                  Regular Campaign
-                </h3>
-                <p className="text-base text-gray-600 mb-5">
-                  Send one-time emails to your audience. Perfect for newsletters, announcements, and promotions.
-                </p>
-                <Link to="/create">
-                  <button className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 text-white py-3 rounded-xl font-semibold text-base hover:scale-105 transition">
-                    Create Regular Campaign
-                  </button>
-                </Link>
-              </div>
-
-              <div className="bg-gradient-to-br from-purple-600 to-pink-600 text-white rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all hover:scale-105">
-                <div className="text-4xl mb-3">🚀</div>
-                <h3 className="text-xl font-bold mb-2">
-                  Drip Campaign (Automated)
-                </h3>
-                <p className="text-base mb-5 opacity-90">
-                  Smart email sequences based on user behavior. Automatically send different emails to openers vs non-openers.
-                </p>
-                <Link to="/drip-builder">
-                  <button className="w-full bg-white text-purple-600 py-3 rounded-xl font-semibold text-base hover:scale-105 transition">
-                    Create Drip Campaign
-                  </button>
-                </Link>
-              </div>
-            </div>
-
-            <div className="mt-10">
-              <p className="text-base text-gray-600 mb-3">
-                Want to start with a template?
-              </p>
-              <Link to="/templates">
-                <button className="px-6 py-3 bg-white text-purple-600 rounded-xl font-semibold hover:shadow-lg transition border-2 border-purple-200">
-                  Browse Template Library
-                </button>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 p-6">
       <div className="max-w-7xl mx-auto">
@@ -326,7 +263,23 @@ export default function CampaignList() {
               </div>
             ) : (
               <div className="bg-white rounded-xl p-10 text-center shadow-md">
-                <p className="text-gray-500 text-base">No campaigns found matching "{searchTerm}"</p>
+                <p className="text-gray-500 text-base mb-4">
+                  {searchTerm ? `No campaigns found matching "${searchTerm}"` : "No campaigns yet. Create your first campaign!"}
+                </p>
+                {!searchTerm && (
+                  <div className="flex gap-3 justify-center">
+                    <Link to="/create">
+                      <button className="px-6 py-3 bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-semibold rounded-xl hover:scale-105 transition">
+                        Create Regular Campaign
+                      </button>
+                    </Link>
+                    <Link to="/drip-builder">
+                      <button className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:scale-105 transition">
+                        Create Drip Campaign
+                      </button>
+                    </Link>
+                  </div>
+                )}
               </div>
             )}
           </div>

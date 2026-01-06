@@ -97,22 +97,12 @@ const Navbar = () => {
                   >
                     Drip Builder
                   </Link>
-                </div>
-
-                <div className="flex items-center gap-6 ml-8">
-                  <Link
-                    to="/templates"
-                    className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-lg font-semibold rounded-xl hover:scale-105 transition-all shadow-lg"
-                  >
-                    Templates
-                  </Link>
-
                   <Link
                     to="/drip-dashboard"
-                    className={`px-6 py-3 text-lg font-semibold rounded-xl shadow-lg transition-all ${
-                      isDripDashboard
-                        ? "bg-purple-700 text-white scale-105"
-                        : "bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:scale-105"
+                    className={`text-lg font-semibold transition-all ${
+                      isActive('/drip-dashboard')
+                        ? 'text-purple-600 border-b-4 border-purple-600 pb-1'
+                        : 'text-gray-700 hover:text-purple-600'
                     }`}
                   >
                     Dashboard
@@ -192,20 +182,13 @@ const Navbar = () => {
             >
               Drip Builder
             </Link>
-            <Link 
-              to="/templates" 
-              onClick={() => setMobileMenuOpen(false)}
-              className="block px-4 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-lg hover:scale-105 transition text-center"
-            >
-              Templates
-            </Link>
             <Link
               to="/drip-dashboard"
               onClick={() => setMobileMenuOpen(false)}
-              className={`block px-4 py-3 rounded-lg font-semibold transition text-center ${
+              className={`block px-4 py-3 rounded-lg font-semibold transition ${
                 isDripDashboard
-                  ? "bg-purple-600 text-white"
-                  : "bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:scale-105"
+                  ? "bg-purple-100 text-purple-600"
+                  : "text-gray-700 hover:bg-gray-100"
               }`}
             >
               Dashboard

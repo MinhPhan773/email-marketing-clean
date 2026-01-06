@@ -12,8 +12,6 @@ import PrivateRoute from "./components/PrivateRoute";
 import Navbar from "./components/Navbar";
 import DripCampaignBuilder from "./pages/DripCampaignBuilder";
 import DripCampaignsDashboard from "./pages/DripCampaignsDashboard";
-import TemplateLibrary from "./templates/TemplateLibrary";
-import TemplateEditor from "./templates/TemplateEditor";
 
 function App() {
   return (
@@ -84,22 +82,6 @@ function App() {
           element={
             <PrivateRoute>
               <DripCampaignsDashboard />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/templates"
-          element={
-            <PrivateRoute>
-              <TemplateLibrary />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/template-editor"
-          element={
-            <PrivateRoute>
-              <TemplateEditor />
             </PrivateRoute>
           }
         />
