@@ -349,11 +349,7 @@ export default function DripCampaignsDashboard() {
                         {format(followUpTime, "MM/dd/yyyy HH:mm")}
                       </span>
                     </div>
-                    
-                    <div className="text-xs text-yellow-400 mt-1.5">
-                      ⚠️ Time may vary ±1-2 minutes due to AWS EventBridge
-                    </div>
-                    
+                                       
                     {statusInfo.status === "waiting" && (
                       <div className="flex justify-between pt-1.5 border-t border-white/20">
                         <span>Time remaining:</span>
